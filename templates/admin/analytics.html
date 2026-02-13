@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="admin-container">
+    <h2 style="color:var(--admin-text);">Аналитика</h2>
+
+    <div style="display:flex; gap:12px; margin:12px 0; flex-wrap:wrap;">
+        <button type="button" id="btn-week"   class="admin-btn admin-btn-primary active">Неделя</button>
+        <button type="button" id="btn-month"  class="admin-btn admin-btn-primary">Месяц</button>
+        <button type="button" id="btn-year"   class="admin-btn admin-btn-primary">Год</button>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr; gap:28px; margin-top:20px;">
+        <div class="chart-wrapper" style="position:relative; height:320px;">
+            <canvas id="chartRevenue"></canvas>
+        </div>
+        <div class="chart-wrapper" style="position:relative; height:320px;">
+            <canvas id="chartOrders"></canvas>
+        </div>
+        <div class="chart-wrapper" style="position:relative; height:320px;">
+            <canvas id="chartItems"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Правильный и безопасный способ передать данные из Django в JS -->
+{{ week|json_script:"week-data" }}
+{{ month|json_script:"month-data" }}
+{{ year|json_script:"year-data" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Безопасно достаём данные, которые Django вставил в <script type="application/json">
+    let analyticsWeek, analyticsMonth, analyticsYear;
+    
+    try {
+        const weekElement = document.getElementById('week-data');
+        const monthElement = document.getElementById('month-data');
+        const yearElement = document.getElementById('year-data');
+        
+        if (weekElement && monthElement && yearElement) {
+            analyticsWeek  = JSON.parse(weekElement.textContent);
+            analyticsMonth = JSON.parse(monthElement.textContent);
+            analyticsYear  = JSON.parse(yearElement.textContent);
+        } else {
+            console.error('Элементы с данными аналитики не найдены');
+            // Создаём пустые данные по умолчанию
+            analyticsWeek = { labels: [], revenue: [], orders: [], items: [] };
+            analyticsMonth = { labels: [], revenue: [], orders: [], items: [] };
+            analyticsYear = { labels: [], revenue: [], orders: [], items: [] };
+        }
+    } catch (e) {
+        console.error('Ошибка при парсинге данных аналитики:', e);
+        analyticsWeek = { labels: [], revenue: [], orders: [], items: [] };
+        analyticsMonth = { labels: [], revenue: [], orders: [], items: [] };
+        analyticsYear = { labels: [], revenue: [], orders: [], items: [] };
+    }
+
+    let chartRevenue = null;
+    let chartOrders  = null;
+    let chartItems   = null;
+
+    function createCharts(data) {
+        if (!data) {
+            console.error('Нет данных для построения графиков');
+            return;
+        }
+
+        const labels = data.labels || [];
+        const revenue = data.revenue || [];
+        const orders = data.orders || [];
+        const items = data.items || [];
+
+        // Удаляем старые графики, если они существуют
+        if (chartRevenue) {
+            chartRevenue.destroy();
+            chartRevenue = null;
+        }
+        if (chartOrders) {
+            chartOrders.destroy();
+            chartOrders = null;
+        }
+        if (chartItems) {
+            chartItems.destroy();
+            chartItems = null;
+        }
+
+        // Получаем элементы canvas
+        const canvasRevenue = document.getElementById('chartRevenue');
+        const canvasOrders = document.getElementById('chartOrders');
+        const canvasItems = document.getElementById('chartItems');
+
+        if (!canvasRevenue || !canvasOrders || !canvasItems) {
+            console.error('Canvas элементы не найдены');
+            return;
+        }
+
+        const ctxR = canvasRevenue.getContext('2d');
+        const ctxO = canvasOrders.getContext('2d');
+        const ctxI = canvasItems.getContext('2d');
+
+        // График выручки
+        chartRevenue = new Chart(ctxR, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Выручка',
+                    data: revenue,
+                    borderColor: '#3699ff',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#3699ff',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: true, position: 'top' },
+                    title: {
+                        display: true,
+                        text: 'Выручка',
+                        font: { size: 16, weight: 'bold' }
+                    }
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        ticks: { 
+                            callback: function(value) {
+                                return value.toLocaleString('ru-RU') + ' ₽';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Сумма (₽)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Дата'
+                        }
+                    }
+                }
+            }
+        });
+
+        // График заказов
+        chartOrders = new Chart(ctxO, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Заказы',
+                    data: orders,
+                    backgroundColor: 'rgba(255, 159, 64, 0.85)',
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: true, position: 'top' },
+                    title: {
+                        display: true,
+                        text: 'Количество заказов',
+                        font: { size: 16, weight: 'bold' }
+                    }
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Количество'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Дата'
+                        }
+                    }
+                }
+            }
+        });
+
+        // График проданных товаров
+        chartItems = new Chart(ctxI, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Единиц продано',
+                    data: items,
+                    backgroundColor: 'rgba(75, 192, 192, 0.85)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: true, position: 'top' },
+                    title: {
+                        display: true,
+                        text: 'Количество проданных единиц',
+                        font: { size: 16, weight: 'bold' }
+                    }
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Количество'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Дата'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function setActive(btnId) {
+        document.querySelectorAll('#btn-week, #btn-month, #btn-year')
+                .forEach(b => b.classList.remove('active'));
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            btn.classList.add('active');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Инициализируем графики с данными за неделю
+        if (analyticsWeek && analyticsWeek.labels && analyticsWeek.labels.length > 0) {
+            createCharts(analyticsWeek);
+            setActive('btn-week');
+        } else {
+            console.warn('Нет данных для отображения графиков');
+        }
+
+        // Назначаем обработчики кнопок
+        const btnWeek = document.getElementById('btn-week');
+        const btnMonth = document.getElementById('btn-month');
+        const btnYear = document.getElementById('btn-year');
+
+        if (btnWeek) {
+            btnWeek.onclick = () => { 
+                createCharts(analyticsWeek);  
+                setActive('btn-week');   
+            };
+        }
+        if (btnMonth) {
+            btnMonth.onclick = () => { 
+                createCharts(analyticsMonth); 
+                setActive('btn-month');  
+            };
+        }
+        if (btnYear) {
+            btnYear.onclick = () => { 
+                createCharts(analyticsYear);  
+                setActive('btn-year');   
+            };
+        }
+    });
+</script>
+
+<style>
+    .admin-btn-primary.active {
+        background: var(--admin-accent, #3699ff) !important;
+        color: white !important;
+        box-shadow: 0 4px 15px rgba(54, 162, 235, 0.4);
+    }
+    @media (max-width: 768px) {
+        .chart-wrapper { height: 260px !important; }
+    }
+</style>
+{% endblock %}

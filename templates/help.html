@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <h1>Помощь</h1>
+    <div class="help-content">
+        <h2>Часто задаваемые вопросы</h2>
+        
+        <div class="faq-item">
+            <h3>Как сделать заказ?</h3>
+            <p>Выберите товар, добавьте его в корзину и следуйте инструкциям на странице оформления заказа.</p>
+        </div>
+        
+        <div class="faq-item">
+            <h3>Какие способы оплаты доступны?</h3>
+            <p>Мы принимаем оплату банковскими картами, электронными кошельками, банковским переводом и наличными при получении.</p>
+        </div>
+        
+        <div class="faq-item">
+            <h3>Как долго ждать доставку?</h3>
+            <p>Срок доставки зависит от выбранного способа и региона. Обычно это 1-5 рабочих дней.</p>
+        </div>
+        
+        <div class="faq-item">
+            <h3>Можно ли вернуть товар?</h3>
+            <p>Да, вы можете вернуть товар в течение 14 дней с момента покупки при соблюдении условий возврата.</p>
+        </div>
+        
+        <div class="faq-item">
+            <h3>Как отследить заказ?</h3>
+            <p>Вы можете отслеживать заказ в личном кабинете или по трек-номеру, отправленному на ваш email.</p>
+        </div>
+        
+        <h2 style="margin-top: 40px;">Не нашли ответ на свой вопрос?</h2>
+        <p>Свяжитесь с нашей службой поддержки через форму обратной связи или по телефону.</p>
+    </div>
+</div>
+
+<style>
+.help-content {
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.8;
+}
+
+.faq-item {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin: 15px 0;
+}
+
+.faq-item h3 {
+    margin-top: 0;
+    color: var(--primary);
+}
+
+.faq-item p {
+    margin-bottom: 0;
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}
+

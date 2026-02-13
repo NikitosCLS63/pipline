@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+.profile-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    background: var(--card-bg, #fff);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    padding: 2rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.profile-avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: #eee;
+    object-fit: cover;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.profile-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    color: #1976d2;
+}
+.profile-info {
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+.profile-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.profile-label {
+    font-weight: 600;
+    color: #333;
+}
+.profile-value {
+    color: #555;
+}
+.profile-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+.profile-btn {
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #1976d2;
+    color: #fff;
+    transition: background 0.2s;
+}
+.profile-btn:hover {
+    background: #1565c0;
+}
+.profile-btn.delete {
+    background: #ef5350;
+}
+.profile-btn.delete:hover {
+    background: #d32f2f;
+}
+.profile-form {
+    width: 100%;
+    margin-top: 1.5rem;
+    display: none;
+}
+.profile-form input {
+    width: 100%;
+    padding: 0.7rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+}
+.profile-form-actions {
+    display: flex;
+    gap: 1rem;
+}
+</style>
+<div class="profile-container">
+    <img src="https://www.gstatic.com/images/branding/product/1x/avatar_square_grey_512dp.png" alt="Аватар" class="profile-avatar" id="profile-avatar">
+    <div class="profile-title">Профиль пользователя</div>
+    <div class="profile-info" id="profile-info">
+        <div class="profile-info-row"><span class="profile-label">Имя:</span> <span class="profile-value" id="profile-first-name"></span></div>
+        <div class="profile-info-row"><span class="profile-label">Фамилия:</span> <span class="profile-value" id="profile-last-name"></span></div>
+        <div class="profile-info-row"><span class="profile-label">Email:</span> <span class="profile-value" id="profile-email"></span></div>
+        <div class="profile-info-row"><span class="profile-label">Телефон:</span> <span class="profile-value" id="profile-phone"></span></div>
+    </div>
+    <div class="profile-actions">
+        <button class="profile-btn" id="edit-profile-btn">Редактировать</button>
+        <button class="profile-btn delete" id="delete-profile-btn">Удалить аккаунт</button>
+        <button class="profile-btn" id="logout-profile-btn">Выйти</button>
+    </div>
+    <form class="profile-form" id="profile-form">
+        <input type="text" id="edit-first-name" placeholder="Имя">
+        <input type="text" id="edit-last-name" placeholder="Фамилия">
+        <input type="email" id="edit-email" placeholder="Email">
+        <input type="text" id="edit-phone" placeholder="Телефон">
+        <div class="profile-form-actions">
+            <button type="submit" class="profile-btn">Сохранить</button>
+            <button type="button" class="profile-btn delete" id="cancel-edit-btn">Отмена</button>
+        </div>
+    </form>
+    <div id="profile-message" style="margin-top:1rem;color:#1976d2;font-weight:600;"></div>
+</div>
+<script src="{% static 'js/profile.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    :root {
+        --orders-text: #333;
+        --orders-text-secondary: #666;
+        --orders-text-light: #999;
+        --orders-link: #1976d2;
+        --orders-link-hover: #1565c0;
+        --orders-bg-badge-new: #4CAF50;
+        --orders-bg-badge-pending: #2196F3;
+        --orders-bg-badge-processing: #FF9800;
+        --orders-bg-badge-shipped: #4CAF50;
+        --orders-bg-badge-delivered: #00BCD4;
+        --orders-bg-badge-cancelled: #f44336;
+        --orders-bg-badge-failed: #9E9E9E;
+        --orders-bg-alert-error: #f8d7da;
+        --orders-text-alert-error: #842029;
+        --orders-green-button: #28a745;
+    }
+    
+    [data-theme="dark"] {
+        --orders-text: #e0e0e0;
+        --orders-text-secondary: #b0b0b0;
+        --orders-text-light: #999999;
+        --orders-link: #ff8c42;
+        --orders-link-hover: #e67e2e;
+        --orders-bg-badge-new: #2e7d32;
+        --orders-bg-badge-pending: #1565c0;
+        --orders-bg-badge-processing: #e67e2e;
+        --orders-bg-badge-shipped: #2e7d32;
+        --orders-bg-badge-delivered: #00796b;
+        --orders-bg-badge-cancelled: #c62828;
+        --orders-bg-badge-failed: #616161;
+        --orders-bg-alert-error: #5d2c2c;
+        --orders-text-alert-error: #ffcccc;
+        --orders-green-button: #4caf50;
+    }
+    
+    .orders-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .orders-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .orders-header h1 {
+        margin: 0;
+    }
+    
+    .btn-back {
+        background: var(--orders-link);
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    
+    .btn-back:hover {
+        background: var(--orders-link-hover);
+    }
+    
+    .order-item {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .order-item:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .order-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .order-status-section {
+            align-items: flex-start;
+            width: 100%;
+        }
+        
+        .status-description {
+            text-align: left;
+            max-width: 100%;
+        }
+    }
+    
+    .order-id {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--orders-text);
+    }
+    
+    .order-status-section {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+    
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+        white-space: nowrap;
+        color: white;
+    }
+    
+    .status-badge.new {
+        background: var(--orders-bg-badge-new);
+    }
+    
+    .status-badge.processing {
+        background: var(--orders-bg-badge-processing);
+    }
+    
+    .status-badge.shipped {
+        background: var(--orders-bg-badge-shipped);
+    }
+    
+    .status-badge.delivered {
+        background: var(--orders-bg-badge-delivered);
+    }
+    
+    .status-badge.cancelled {
+        background: var(--orders-bg-badge-cancelled);
+    }
+    
+    .status-badge.default {
+        background: var(--orders-bg-badge-failed);
+    }
+    
+    .status-description {
+        margin: 0;
+        color: var(--orders-text-secondary);
+        font-size: 0.85rem;
+        text-align: right;
+        max-width: 300px;
+    }
+    
+    .order-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        padding: 1rem;
+        background: var(--secondary);
+        border-radius: 8px;
+    }
+    
+    @media (max-width: 768px) {
+        .order-info {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        color: var(--orders-text-secondary);
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .info-value {
+        color: var(--orders-text);
+        font-weight: 500;
+    }
+    
+    .order-items {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--secondary);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+    }
+    
+    .order-items-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .item-row:last-child {
+        border-bottom: none;
+    }
+    
+    .item-name {
+        flex: 1;
+        font-size: 0.9rem;
+    }
+    
+    .item-qty {
+        width: 60px;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+    
+    .item-price {
+        width: 100px;
+        text-align: right;
+        font-size: 0.9rem;
+    }
+    
+    .order-total {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid var(--border);
+    }
+    
+    .total-label {
+        font-weight: 600;
+        margin-right: 1rem;
+        min-width: 150px;
+        text-align: right;
+        color: var(--orders-text);
+    }
+    
+    .total-value {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--orders-link);
+        min-width: 100px;
+        text-align: right;
+    }
+    
+    .empty-message {
+        text-align: center;
+        padding: 3rem;
+        color: var(--orders-text-light);
+    }
+    
+    .empty-message svg {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 2rem;
+        font-size: 1.1rem;
+        color: var(--orders-text-secondary);
+    }
+    
+    .error-message {
+        background: var(--orders-bg-alert-error);
+        border: 1px solid var(--orders-bg-alert-error);
+        color: var(--orders-text-alert-error);
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="orders-container">
+    <div class="orders-header">
+        <h1>Мои заказы</h1>
+        <a href="{% url 'catalog' %}" class="btn-back">← Вернуться в каталог</a>
+    </div>
+    
+    <div id="orders-content">
+        {% if orders %}
+            <p style="margin-bottom: 1rem; color: #666; font-size: 0.9rem;">
+                Найдено заказов: {{ orders|length }}
+                {% if customer_id %}
+                    (Customer ID: {{ customer_id }})
+                {% endif %}
+            </p>
+            {% for order in orders %}
+            <div class="order-item">
+                <div class="order-header">
+                    <div class="order-id">Заказ #{{ order.order_id }}</div>
+                    <div class="order-status-section">
+                        {% if order.status == 'new' %}
+                            <div class="status-badge new">Новый</div>
+                            <p class="status-description">Заказ создан и ожидает обработки</p>
+                        {% elif order.status == 'processing' %}
+                            <div class="status-badge processing">В обработке</div>
+                            <p class="status-description">Заказ обрабатывается, товары готовятся к отправке</p>
+                        {% elif order.status == 'shipped' %}
+                            <div class="status-badge shipped">Отправлен</div>
+                            <p class="status-description">Заказ отправлен, вы получите трек-номер для отслеживания</p>
+                        {% elif order.status == 'delivered' %}
+                            <div class="status-badge delivered">Доставлен</div>
+                            <p class="status-description">Заказ доставлен по указанному адресу</p>
+                        {% elif order.status == 'cancelled' %}
+                            <div class="status-badge cancelled">Отменен</div>
+                            <p class="status-description">Заказ был отменен</p>
+                        {% else %}
+                            <div class="status-badge default">{{ order.status|default:"Неизвестно" }}</div>
+                            <p class="status-description">Статус заказа</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="order-info">
+                    <div class="info-item">
+                        <span class="info-label">Дата заказа</span>
+                        <span class="info-value">{{ order.order_date|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Сумма</span>
+                        <span class="info-value">₽{{ order.total_amount|floatformat:0 }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Метод оплаты</span>
+                        <span class="info-value">{{ order.payment_method|default:"Не указан" }}</span>
+                    </div>
+                    {% if order.tracking_number %}
+                    <div class="info-item">
+                        <span class="info-label">Трек-номер</span>
+                        <span class="info-value">{{ order.tracking_number }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="order-items" id="items-{{ order.order_id }}">
+                    <div class="order-items-title">Товары в заказе:</div>
+                    {% for item in order.orderitems_set.all %}
+                    <div class="item-row">
+                        <div class="item-name">{{ item.product.product_name }}</div>
+                        <div class="item-qty">x{{ item.quantity }}</div>
+                        <div class="item-price">₽{{ item.price_at_purchase|floatformat:0 }}</div>
+                    </div>
+                    {% endfor %}
+                    <div class="order-total">
+                        <div class="total-label">Итого:</div>
+                        <div class="total-value">₽{{ order.total_amount|floatformat:0 }}</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 1rem;">
+                    <a href="/api/orders/{{ order.order_id }}/receipt/" class="btn-back" style="background: #28a745; text-decoration:none; display:inline-block;">
+                        📥 Скачать чек
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-message">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <p>У вас нет заказов</p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                    <a href="{% url 'catalog' %}" style="color: #1976d2;">Начните покупки</a>
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Если заказы не загружены через template, загружаем через API
+    const ordersContent = document.getElementById('orders-content');
+    const hasOrders = ordersContent.querySelector('.order-item');
+    
+    if (!hasOrders) {
+        console.log('[ORDERS] No orders in template, loading from API...');
+        loadOrdersFromAPI();
+    }
+});
+
+function loadOrdersFromAPI() {
+    const token = localStorage.getItem('access_token') || getCookie('access_token');
+    
+    if (!token) {
+        console.log('[ORDERS] No access token found');
+        return;
+    }
+    
+    fetch('/api/orders/', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log('[ORDERS] API response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('[ORDERS] Received orders:', data);
+        if (data && data.length > 0) {
+            renderOrders(data);
+        } else {
+            showEmptyMessage();
+        }
+    })
+    .catch(error => {
+        console.error('[ORDERS] Error loading orders:', error);
+        // Попробуем загрузить без токена (может быть guest)
+        const customerId = getCookie('customer_id');
+        if (customerId) {
+            fetch(`/api/orders/?customer_id=${customerId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    renderOrders(data);
+                } else {
+                    showEmptyMessage();
+                }
+            })
+            .catch(err => {
+                console.error('[ORDERS] Error loading orders by customer_id:', err);
+                showEmptyMessage();
+            });
+        } else {
+            showEmptyMessage();
+        }
+    });
+}
+
+function renderOrders(orders) {
+    const ordersContent = document.getElementById('orders-content');
+    ordersContent.innerHTML = '';
+    
+    orders.forEach(order => {
+        const orderDiv = document.createElement('div');
+        orderDiv.className = 'order-item';
+        
+        const statusInfo = getStatusInfo(order.status);
+        
+        orderDiv.innerHTML = `
+            <div class="order-header">
+                <div class="order-id">Заказ #${order.order_id}</div>
+                <div class="order-status-section">
+                    <div class="status-badge ${statusInfo.class}">${statusInfo.label}</div>
+                    <p class="status-description">${statusInfo.description}</p>
+                </div>
+            </div>
+            
+            <div class="order-info">
+                <div class="info-item">
+                    <span class="info-label">Дата заказа</span>
+                    <span class="info-value">${formatDate(order.order_date)}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Сумма</span>
+                    <span class="info-value">₽${parseFloat(order.total_amount || 0).toFixed(0)}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Метод оплаты</span>
+                    <span class="info-value">${order.payment_method || 'Не указан'}</span>
+                </div>
+                ${order.tracking_number ? `
+                <div class="info-item">
+                    <span class="info-label">Трек-номер</span>
+                    <span class="info-value">${order.tracking_number}</span>
+                </div>
+                ` : ''}
+            </div>
+            
+            <div class="order-items">
+                <div class="order-items-title">Товары в заказе:</div>
+                <div id="items-${order.order_id}">Загрузка товаров...</div>
+                <div class="order-total">
+                    <div class="total-label">Итого:</div>
+                    <div class="total-value">₽${parseFloat(order.total_amount || 0).toFixed(0)}</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="/api/orders/${order.order_id}/receipt/" class="btn-back" style="background: #28a745; text-decoration:none; display:inline-block;">
+                    📥 Скачать чек
+                </a>
+            </div>
+        `;
+        
+        ordersContent.appendChild(orderDiv);
+        
+        // Загружаем товары заказа
+        loadOrderItems(order.order_id);
+    });
+}
+
+function loadOrderItems(orderId) {
+    fetch(`/api/order-items/?order=${orderId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(items => {
+        const itemsContainer = document.getElementById(`items-${orderId}`);
+        if (items && items.length > 0) {
+            itemsContainer.innerHTML = items.map(item => `
+                <div class="item-row">
+                    <div class="item-name">${item.product_name || 'Товар'}</div>
+                    <div class="item-qty">x${item.quantity}</div>
+                    <div class="item-price">₽${parseFloat(item.price_at_purchase || 0).toFixed(0)}</div>
+                </div>
+            `).join('');
+        } else {
+            itemsContainer.innerHTML = '<p style="color: #999;">Товары не найдены</p>';
+        }
+    })
+    .catch(error => {
+        console.error(`[ORDERS] Error loading items for order ${orderId}:`, error);
+        document.getElementById(`items-${orderId}`).innerHTML = '<p style="color: #999;">Ошибка загрузки товаров</p>';
+    });
+}
+
+function getStatusInfo(status) {
+    const statusMap = {
+        'new': { class: 'new', label: 'Новый', description: 'Заказ создан и ожидает обработки' },
+        'processing': { class: 'processing', label: 'В обработке', description: 'Заказ обрабатывается, товары готовятся к отправке' },
+        'shipped': { class: 'shipped', label: 'Отправлен', description: 'Заказ отправлен, вы получите трек-номер для отслеживания' },
+        'delivered': { class: 'delivered', label: 'Доставлен', description: 'Заказ доставлен по указанному адресу' },
+        'cancelled': { class: 'cancelled', label: 'Отменен', description: 'Заказ был отменен' }
+    };
+    
+    return statusMap[status] || { class: 'default', label: status || 'Неизвестно', description: 'Статус заказа' };
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day}.${month}.${year} ${hours}:${minutes}`;
+}
+
+function showEmptyMessage() {
+    const ordersContent = document.getElementById('orders-content');
+    ordersContent.innerHTML = `
+        <div class="empty-message">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <p>У вас нет заказов</p>
+            <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                <a href="{% url 'catalog' %}" style="color: #1976d2;">Начните покупки</a>
+            </p>
+        </div>
+    `;
+}
+
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+</script>
+{% endblock %}

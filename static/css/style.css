@@ -1,0 +1,577 @@
+/* C:\WebsiteDjSND\static\css\style.css */
+
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+    transition: background 0.4s ease, color 0.4s ease;
+}
+
+header {
+    background: var(--header-bg);
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(4px);
+}
+
+.header-top {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.logo h1 {
+    font-size: 22px;
+    color: var(--primary);
+    margin: 0;
+    font-weight: 700;
+}
+
+.logo h6 {
+    font-size: 10px;
+    color: var(--text-secondary, #666);
+    margin: 0;
+    text-transform: lowercase;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex: 1;
+}
+
+nav a {
+    margin: 0;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 13px;
+    transition: color 0.2s ease, background 0.2s ease;
+    padding: 5px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+nav a.active {
+    color: var(--primary);
+    background: rgba(255,98,0,0.08);
+    font-weight: 600;
+}
+
+nav a:hover {
+    color: var(--primary);
+}
+
+nav span {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+
+/* Cart link styles */
+#cart-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+#cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+#user-email {
+    padding: 5px 8px;
+    font-size: 12px;
+    color: var(--text-secondary, #666);
+    display: inline-block;
+}
+
+.content {
+    padding: 70px 20px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Общий запас сверху для страниц, если в шаблоне не используется .content */
+body { padding-top: 70px; }
+
+.slider {
+    height: 300px;
+    background: var(--card-bg);
+    margin-bottom: 20px;
+    text-align: center;
+    line-height: 300px;
+    color: var(--text-secondary, #666);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.category-item {
+    display: inline-block;
+    margin: 10px;
+    text-align: center;
+    width: 150px;
+}
+
+.category-item p {
+    margin: 5px 0 0;
+    font-size: 14px;
+    color: var(--text-secondary, #666);
+}
+
+footer {
+    background: var(--footer-bg);
+    padding: 40px 20px 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+    position: relative;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-section h3 {
+    font-size: 16px;
+    color: var(--footer-heading);
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-section li {
+    margin-bottom: 6px;
+}
+
+.footer-section a {
+    text-decoration: none;
+    color: var(--primary);
+    font-size: 14px;
+    transition: opacity 0.3s ease;
+}
+
+.footer-section a:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+.footer-section input {
+    width: 100%;
+    padding: 8px 12px;
+    margin: 8px 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 14px;
+}
+
+.footer-section p {
+    color: var(--footer-text);
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 6px 0;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 30px;
+}
+
+.footer-bottom p {
+    font-size: 12px;
+    color: var(--footer-text);
+}
+
+/* === ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ (в футере) === */
+.theme-toggle {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 42px;
+    height: 42px;
+    background: var(--toggle-bg);
+    border: 2px solid var(--toggle-border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.4s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    font-size: 19px;
+    color: var(--toggle-icon);
+}
+
+.theme-toggle:hover {
+    transform: scale(1.12);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* === ПЕРЕМЕННЫЕ ТЕМЫ === */
+:root {
+    /* СВЕТЛАЯ ТЕМА */
+    --bg: #ffffff;
+    --text: #1a1a1a;
+    --header-bg: #ffffff;
+    --footer-bg: #333;
+    --card-bg: #ffffff;
+    --border: #e0e0e0;
+    --primary: #ff6200;
+    --input-bg: #ffffff;
+    --footer-heading: #fff;
+    --footer-text: #fff;
+    --toggle-bg: #ffffff;
+    --toggle-border: #1b1a1a;
+    --toggle-icon: #ff6200;
+}
+
+[data-theme="dark"] {
+    /* ТЁМНАЯ ТЕМА */
+    --bg: #121212;
+    --text: #e0e0e0;
+    --header-bg: #1e1e1e;
+    --footer-bg: #1a1a1a;
+    --card-bg: #2d2d2d;
+    --border: #404040;
+    --primary: #ff8c42;
+    --input-bg: #2d2d2d;
+    --footer-heading: #ffffff;
+    --footer-text: #bbbbbb;
+    --toggle-bg: #2d2d2d;
+    --toggle-border: #555555;
+    --toggle-icon: #ff8c42;
+}
+
+/* Применение переменных */
+body { background: var(--bg); color: var(--text); }
+header, .auth-container { background: var(--header-bg); color: var(--text); }
+footer { background: var(--footer-bg); }
+input, button, .input-group, .slider { 
+    background: var(--card-bg) !important; 
+    color: var(--text) !important; 
+    border-color: var(--border) !important; 
+}
+a { color: var(--primary); }
+.footer-section input { background: var(--input-bg); }
+
+
+
+.admin-container {
+    max-width: 800px;
+    margin: 100px auto 50px; /* чтобы не перекрывал header */
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.admin-container h1 {
+    text-align: center;
+    color: var(--primary);
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select,
+input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+textarea {
+    min-height: 80px;
+}
+
+button.btn, .btn-secondary {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button.btn {
+    background: var(--primary);
+    color: white;
+}
+
+button.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.preview img {
+    max-width: 150px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+}
+
+.error {
+    color: red;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+
+.preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.img-box {
+  position: relative;
+  display: inline-block;
+}
+
+.preview-image {
+  max-width: 110px;
+  border-radius: 6px;
+}
+
+.remove-btn, .main-btn {
+  position: absolute;
+  right: 4px;
+  padding: 2px 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.remove-btn {
+  top: 4px;
+  background: red;
+  color: white;
+}
+
+.main-btn {
+  bottom: 4px;
+  background: green;
+  color: white;
+}
+
+/* === DARK THEME FIXES FOR INLINE STYLES === */
+[data-theme="dark"] {
+    --fix-text-666: #b0b0b0;
+    --fix-text-999: #999999;
+    --fix-text-333: #e0e0e0;
+    --fix-bg-fff: #252525;
+    --fix-bg-f8f9fa: #252525;
+    --fix-link-1976d2: #ff8c42;
+    --fix-text-secondary: #b0b0b0;
+}
+
+/* Override inline color styles for dark theme */
+[data-theme="dark"] [style*="color: #666"],
+[data-theme="dark"] [style*="color:#666"] {
+    color: #b0b0b0 !important;
+}
+
+[data-theme="dark"] [style*="color: #999"],
+[data-theme="dark"] [style*="color:#999"] {
+    color: #999999 !important;
+}
+
+[data-theme="dark"] [style*="color: #333"],
+[data-theme="dark"] [style*="color:#333"] {
+    color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] [style*="background: white"],
+[data-theme="dark"] [style*="background:#fff"],
+[data-theme="dark"] [style*="background: #fff"] {
+    background: #252525 !important;
+    color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] [style*="background: #f8f9fa"],
+[data-theme="dark"] [style*="background:#f8f9fa"] {
+    background: #252525 !important;
+    color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] [style*="color: #1976d2"],
+[data-theme="dark"] [style*="color:#1976d2"] {
+    color: #ff8c42 !important;
+}
+
+[data-theme="dark"] [style*="color: #6c757d"],
+[data-theme="dark"] [style*="color:#6c757d"] {
+    color: #b0b0b0 !important;
+}
+
+/* Modal content background fix */
+[data-theme="dark"] .modal-content {
+    background: #252525 !important;
+    color: #e0e0e0 !important;
+}
+
+/* Profile values should be visible in dark theme */
+[data-theme="dark"] .profile-info .profile-value,
+[data-theme="dark"] .profile-info .profile-label {
+    color: #ffffff !important;
+}
+
+/* Orders and Admin Pages Dark Theme Fixes */
+[data-theme="dark"] select,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="password"] {
+    background: #252525 !important;
+    color: #e0e0e0 !important;
+    border-color: #404040 !important;
+}
+
+[data-theme="dark"] select:focus,
+[data-theme="dark"] input:focus {
+    border-color: #ff8c42 !important;
+    box-shadow: 0 0 0 3px rgba(255,140,66,0.25) !important;
+}
+
+[data-theme="dark"] button.btn-back,
+[data-theme="dark"] [style*="background: #1976d2"],
+[data-theme="dark"] [style*="background:#1976d2"] {
+    background: #ff8c42 !important;
+}
+
+[data-theme="dark"] button.btn-back:hover,
+[data-theme="dark"] [style*="background: #1565c0"],
+[data-theme="dark"] [style*="background:#1565c0"] {
+    background: #e67e2e !important;
+}
+
+/* Green buttons in dark theme */
+[data-theme="dark"] [style*="background: #28a745"],
+[data-theme="dark"] [style*="background:#28a745"] {
+    background: #4caf50 !important;
+}
+
+/* Blue buttons in dark theme */
+[data-theme="dark"] [style*="background: #007bff"],
+[data-theme="dark"] [style*="background:#007bff"] {
+    background: #ff8c42 !important;
+}
+
+[data-theme="dark"] [style*="background: #0056b3"],
+[data-theme="dark"] [style*="background:#0056b3"] {
+    background: #e67e2e !important;
+}
+
+/* Force dark text color inside password fields so typed characters remain readable
+   and consistent (user requested dark letters instead of light when typing). */
+input[type="password"] {
+    color: #1a1a1a !important;
+}
+
+/* Placeholder should be slightly muted but visible in both themes */
+input[type="password"]::placeholder {
+    color: #777 !important;
+    opacity: 1;
+}
+
+/* In case dark theme forces inline styles, make a targeted override */
+[data-theme="dark"] input[type="password"] {
+    color: #1a1a1a !important;
+}
+
+/* Make phone input text dark as well (covers type=tel and fields named/ID including 'phone') */
+input[type="tel"],
+input[name*="phone"],
+input[id*="phone"] {
+    color: #1a1a1a !important;
+}
+
+input[type="tel"]::placeholder,
+input[name*="phone"]::placeholder,
+input[id*="phone"]::placeholder {
+    color: #777 !important;
+    opacity: 1;
+}
+
+[data-theme="dark"] input[type="tel"],
+[data-theme="dark"] input[name*="phone"],
+[data-theme="dark"] input[id*="phone"] {
+    color: #1a1a1a !important;
+}
+
+
+

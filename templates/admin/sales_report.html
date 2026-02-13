@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .report-container { max-width:1200px; margin:20px auto; padding:0 12px; color:var(--admin-text); }
+  .period-buttons { display:flex; gap:12px; align-items:center; margin:20px 0; flex-wrap:wrap; }
+  .period-btn { padding:8px 16px; background:var(--admin-table-bg); color:var(--admin-text); text-decoration:none; border-radius:4px; display:inline-block; cursor:pointer; transition: all 0.3s; border:1px solid var(--admin-border); }
+  .period-btn:hover { opacity:0.9; transform:translateY(-2px); }
+  .period-btn.active { background:var(--admin-primary); color:white; border-color:var(--admin-primary); }
+  .export-btn { padding:8px 16px; background:var(--admin-success); color:white; text-decoration:none; border-radius:4px; margin-left:auto; display:inline-block; border:none; }
+  .export-btn:hover { background:#228a3e; }
+  .export-group { display:flex; gap:8px; align-items:center; margin-left:auto; flex-wrap:wrap; }
+  .download-btn { padding:8px 14px; background:var(--admin-info); color:white; text-decoration:none; border-radius:4px; font-size:0.9em; transition:0.3s; border:none; cursor:pointer; }
+  .download-btn:hover { background:#138496; }
+  .download-btn.csv { background:var(--admin-success); }
+  .download-btn.csv:hover { background:#228a3e; }
+  .download-btn.excel { background:#10b981; }
+  .download-btn.excel:hover { background:#059669; }
+  .download-btn.pdf { background:var(--admin-danger); }
+  .download-btn.pdf:hover { background:#c82333; }
+  .report-table { width:100%; border-collapse:collapse; margin-top:12px; background:var(--admin-bg); }
+  .report-table thead { background:var(--admin-table-bg); }
+  .report-table th { padding:12px; text-align:left; border-bottom:1px solid var(--admin-border); color:var(--admin-text); }
+  .report-table td { padding:12px; border-bottom:1px solid var(--admin-border); color:var(--admin-text); }
+  .report-table tbody tr:hover { background:var(--admin-table-hover); }
+  .text-right { text-align:right; }
+  .summary-box { margin-top:20px; padding:12px; background:var(--admin-card-bg); border-radius:4px; text-align:right; border:1px solid var(--admin-border); }
+  .summary-label { font-weight:600; margin-right:12px; color:var(--admin-text); }
+  .summary-value { font-size:1.2em; color:var(--admin-primary); font-weight:700; }
+</style>
+
+<div class="report-container">
+  <h2 style="color:var(--admin-text);">Отчёт о продажах товаров</h2>
+  
+  <div class="period-buttons">
+    <a href="?period=week" class="period-btn {% if period == 'week' %}active{% endif %}">📅 Неделя</a>
+    <a href="?period=month" class="period-btn {% if period == 'month' %}active{% endif %}">📅 Месяц</a>
+    <a href="?period=year" class="period-btn {% if period == 'year' %}active{% endif %}">📅 Год</a>
+    <div class="export-group">
+      <a href="/admin-panel/export-sales-report/?period={{ period }}" class="download-btn csv" title="Скачать в CSV">📊 CSV</a>
+      <a href="/admin-panel/export-sales-report-excel/?period={{ period }}" class="download-btn excel" id="excel-export-link" title="Скачать в Excel">📈 Excel</a>
+      <a href="/admin-panel/export-sales-report-pdf/?period={{ period }}" class="download-btn pdf" id="pdf-export-link" title="Скачать в PDF">📄 PDF (old)</a>
+      <button onclick="previewSalesReportPDF('{{ period }}')" class="download-btn" style="background:#8b5cf6;" title="Предпросмотр PDF">👁 Preview</button>
+        <!-- Removed duplicate Download button -->
+    </div>
+  </div>
+  
+  <div style="margin-top: 10px; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 11px; color: #6c757d;">
+    <span>Горячие клавиши: </span>
+    <span style="margin-left: 8px;"><kbd style="background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-size: 10px;">Alt</kbd> + <kbd style="background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-size: 10px;">E</kbd> - Excel</span>
+    <span style="margin-left: 8px;"><kbd style="background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-size: 10px;">Alt</kbd> + <kbd style="background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-size: 10px;">P</kbd> - PDF</span>
+      <span style="margin-left: 8px;"><kbd style="background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-size: 10px;">Alt</kbd> + <kbd style="background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-size: 10px;">P</kbd> - PDF export</span>
+  </div>
+
+  <p style="color:#666; margin:12px 0;">
+    <strong>Период:</strong> {{ start_date|date:'d.m.Y' }} — {{ now|date:'d.m.Y' }}
+  </p>
+
+  <table class="report-table">
+    <thead>
+      <tr>
+        <th>Product ID</th>
+        <th>Товар</th>
+        <th>Категория</th>
+        <th class="text-right">Продано (шт)</th>
+        <th class="text-right">Выручка (₽)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in sales_data %}
+      <tr>
+        <td>{{ item.product_id }}</td>
+        <td>{{ item.product__product_name }}</td>
+        <td>{{ item.product__category__category_name|default:'N/A' }}</td>
+        <td class="text-right">{{ item.total_quantity }}</td>
+        <td class="text-right"><strong>{{ item.total_revenue|floatformat:2 }}</strong></td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" style="text-align:center; color:#999;">Нет данных о продажах за этот период</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if sales_data %}
+  <div class="summary-box">
+    <span class="summary-label">💰 Общая выручка:</span>
+    <span class="summary-value">₽{{ total_revenue|floatformat:2 }}</span>
+  </div>
+  <div class="summary-box" style="margin-top: 10px;">
+    <span class="summary-label">📦 Всего товаров продано:</span>
+    <span class="summary-value">{{ total_quantity }} шт.</span>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+// Server-provided period bounds (used so preview matches server-side page data)
+const SERVER_START_DATE = '{{ start_date|date:"Y-m-d" }}';
+const SERVER_END_DATE = '{{ now|date:"Y-m-d" }}';
+
+async function previewSalesReportPDF(period) {
+  const token = localStorage.getItem('access_token');
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  
+  // Если период неделя, начало отсчета с 7 дней назад
+  let start_date, end_date;
+  if (period === 'week') {
+    start_date = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    end_date = now;
+  } else if (period === 'year') {
+    start_date = new Date(now.getFullYear(), 0, 1);
+    end_date = now;
+  } else {
+    // Use server-provided start/end for month so preview matches the page
+    if (SERVER_START_DATE && SERVER_END_DATE) {
+      start_date = new Date(SERVER_START_DATE + 'T00:00:00');
+      end_date = new Date(SERVER_END_DATE + 'T23:59:59');
+    } else {
+      start_date = firstDay;
+      end_date = lastDay;
+    }
+  }
+  
+  const startStr = start_date.toISOString().split('T')[0];
+  const endStr = end_date.toISOString().split('T')[0];
+  
+  try {
+    const response = await fetch(
+      `/api/reports/sales/pdf-preview/?start_date=${startStr}&end_date=${endStr}`,
+      { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/pdf' }, credentials: 'same-origin' }
+    );
+    
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      // Очистим URL после открытия
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    } else {
+      alert('❌ Ошибка при генерации отчета: ' + response.statusText);
+    }
+  } catch (e) {
+    console.error('Error:', e);
+    alert('❌ Ошибка при генерации отчета: ' + e.message);
+  }
+}
+
+async function downloadSalesReportPDF(period) {
+  const token = localStorage.getItem('access_token');
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  
+  // Если период неделя, начало отсчета с 7 дней назад
+  let start_date, end_date;
+  if (period === 'week') {
+    start_date = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    end_date = now;
+  } else if (period === 'year') {
+    start_date = new Date(now.getFullYear(), 0, 1);
+    end_date = now;
+  } else {
+    start_date = firstDay;
+    end_date = lastDay;
+  }
+  
+  const startStr = start_date.toISOString().split('T')[0];
+  const endStr = end_date.toISOString().split('T')[0];
+  
+  try {
+    const response = await fetch(
+      `/api/reports/sales/pdf-preview/?start_date=${startStr}&end_date=${endStr}`,
+      { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/pdf' }, credentials: 'same-origin' }
+    );
+    
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sales_report_${period}_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } else {
+      alert('❌ Ошибка при скачивании отчета: ' + response.statusText);
+    }
+  } catch (e) {
+    console.error('Error:', e);
+    alert('❌ Ошибка при скачивании отчета: ' + e.message);
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+    const isInput = e.target.tagName === 'INPUT' || 
+                   e.target.tagName === 'TEXTAREA' || 
+                   e.target.isContentEditable;
+    
+    if (isInput) return;
+    
+    // Alt + E - Excel
+    if (e.altKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        const excelLink = document.getElementById('excel-export-link');
+        if (excelLink) {
+            window.location.href = excelLink.href;
+        }
+    }
+    
+    // Alt + P - PDF
+    if (e.altKey && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        const pdfLink = document.getElementById('pdf-export-link');
+        if (pdfLink) {
+            window.location.href = pdfLink.href;
+        }
+    }
+    
+    // Alt + V - Preview
+    if (e.altKey && e.key.toLowerCase() === 'v') {
+        e.preventDefault();
+        const period = new URLSearchParams(window.location.search).get('period') || 'month';
+        previewSalesReportPDF(period);
+    }
+    
+    // Removed Alt + D - Download keyboard handler
+    // The Download button has been removed, so this handler is no longer necessary.
+});
+</script>
+{% endblock %}

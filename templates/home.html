@@ -1,0 +1,210 @@
+<!-- C:\WebsiteDjSND\templates\home.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <!-- Главный баннер с промо -->
+    <div class="hero-banner">
+        <div class="hero-content">
+            <h1 class="hero-title">Компьютерная техника будущего</h1>
+           
+            <a href="{% url 'catalog' %}" class="hero-btn">Начать покупку</a>
+        </div>
+    </div>
+
+    <!-- Промо карточки -->
+    <div class="promo-section">
+        <div class="promo-card promo-card-1">
+            <div class="promo-icon">💻</div>
+            <h3>Мощные ноутбуки</h3>
+            <p>От учёбы до профессиональной работы</p>
+            <a href="{% url 'catalog' %}?category=Ноутбуки" class="promo-link">Смотреть →</a>
+        </div>
+        <div class="promo-card promo-card-3">
+            <div class="promo-icon">🖱️</div>
+            <h3>Мыши</h3>
+            <p>Проводные и беспроводные</p>
+            <a href="{% url 'catalog' %}?category=Мыши" class="promo-link">Смотреть →</a>
+        </div>
+        <div class="promo-card promo-card-4">
+            <div class="promo-icon">⌨️</div>
+            <h3>Клавиатуры</h3>
+            <p>Механические и мембранные</p>
+            <a href="{% url 'catalog' %}?category=Клавиатуры" class="promo-link">Смотреть →</a>
+        </div>
+    </div>
+
+    <!-- Информация о компании -->
+    <h2 style="margin-top: 40px; margin-bottom: 20px;">О нас</h2>
+    <p>WebsiteDjSND — ваш надёжный онлайн-магазин компьютерной техники. Мы предлагаем широкий ассортимент товаров и лучший сервис!</p>
+</div>
+
+<style>
+/* Главный баннер */
+.hero-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 80px 20px;
+    text-align: center;
+    border-radius: 12px;
+    margin-bottom: 40px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: white;
+}
+
+.hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    margin: 0 0 15px 0;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    margin: 0 0 25px 0;
+    opacity: 0.95;
+    font-weight: 300;
+}
+
+.hero-btn {
+    display: inline-block;
+    background: white;
+    color: #667eea;
+    padding: 15px 40px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.hero-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .hero-banner {
+    background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+}
+
+/* Промо карточки */
+.promo-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.promo-card {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid var(--border);
+    cursor: pointer;
+}
+
+.promo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.promo-card-1 {
+    border-top: 4px solid #667eea;
+}
+
+.promo-card-2 {
+    border-top: 4px solid #f093fb;
+}
+
+.promo-card-3 {
+    border-top: 4px solid #4facfe;
+}
+
+.promo-card-4 {
+    border-top: 4px solid #43e97b;
+}
+
+.promo-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.promo-card h3 {
+    font-size: 1.3rem;
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+}
+
+.promo-card p {
+    color: var(--text-secondary);
+    margin: 0 0 15px 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.promo-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s;
+}
+
+.promo-link:hover {
+    color: #764ba2;
+}
+
+[data-theme="dark"] .promo-link {
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .promo-link:hover {
+    color: #c7d2fe;
+}
+
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.category-item {
+    text-align: center;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.category-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.category-item a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.category-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.category-item p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+</style>
+{% endblock %}

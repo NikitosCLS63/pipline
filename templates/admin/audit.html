@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аудит — Админ панель</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{% static 'js/theme-toggle.js' %}"></script>
+    <style>
+        :root {
+            --orange: #d97706;
+            --orange-dark: #c56a00;
+            --orange-light: #fef3e8;
+            --red: #e63946;
+            --red-dark: #d00000;
+            --gray: #f8f9fa;
+
+            /* Светлая тема */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9f9f9;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border-color: #eeeeee;
+            --table-hover: #fff8f0;
+            --audit-update: #fff3cd;
+            --audit-create: #d4edda;
+            --audit-delete: #f8d7da;
+        }
+
+        /* Тёмная тема */
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --border-color: #404040;
+            --table-hover: #3a2a1a;
+            --audit-update: #4a3a1a;
+            --audit-create: #1a3a1a;
+            --audit-delete: #3a1a1a;
+        }
+
+        body {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            color: var(--text-primary);
+            font-size: 2rem;
+        }
+
+        .header p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        .filters {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+
+        .filter-group input, .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .filter-group input:focus, .filter-group select:focus {
+            outline: none;
+            border-color: var(--orange);
+        }
+
+        .btn-filter {
+            background: var(--orange);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            grid-column: 1 / -1;
+            justify-self: start;
+            max-width: 150px;
+        }
+
+        .btn-filter:hover {
+            background: var(--orange-dark);
+        }
+
+        .audit-table {
+            background: var(--bg-primary);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .audit-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .audit-table th {
+            background: var(--orange);
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .audit-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        .audit-table tr:hover {
+            background: var(--table-hover);
+        }
+
+        .action-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .action-update {
+            background: var(--audit-update);
+            color: #856404;
+        }
+
+        .action-create {
+            background: var(--audit-create);
+            color: #155724;
+        }
+
+        .action-delete {
+            background: var(--audit-delete);
+            color: #721c24;
+        }
+
+        .user-info {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .timestamp {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .changes {
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .changes strong {
+            color: var(--text-primary);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 5px;
+        }
+
+        .pagination a, .pagination span {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .pagination a:hover {
+            background: var(--table-hover);
+        }
+
+        .pagination .current {
+            background: var(--orange);
+            color: white;
+            border-color: var(--orange);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-secondary);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--orange);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 10px;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .audit-table {
+                overflow-x: auto;
+            }
+
+            .audit-table table {
+                min-width: 800px;
+            }
+        }
+    </style>
+    <script>
+        // Функция для красивого отображения данных из JSON
+        function formatAuditValue(value) {
+            if (!value) return '';
+            
+            try {
+                // Если значение содержит JSON (возможно с префиксом), извлечём и распарсим
+                if (typeof value === 'string') {
+                    let jsonText = value.trim();
+                    // Найдём начало JSON-объекта/массива
+                    let idx = jsonText.indexOf('{');
+                    if (idx === -1) idx = jsonText.indexOf('[');
+                    if (idx > 0) jsonText = jsonText.substring(idx);
+
+                    if (jsonText.startsWith('{') || jsonText.startsWith('[')) {
+                        try {
+                            const parsed = JSON.parse(jsonText);
+
+                            // Для ORDER_CHANGED / ORDER_STATUS_CHANGE
+                            if (parsed.new_status) {
+                                const total = Number(parsed.new_total);
+                                const totalStr = !isNaN(total) ? total.toFixed(2) : parsed.new_total;
+                                return `Статус: <strong>${translateAuditValue(parsed.new_status)}</strong> | Сумма: <strong>${totalStr}₽</strong> | Email: <strong>${parsed.customer_email || ''}</strong>`;
+                            }
+
+                            // Для PRICE_CHANGE
+                            if (parsed.new_price) {
+                                const oldP = Number(parsed.old_price);
+                                const newP = Number(parsed.new_price);
+                                const change = (isNaN(newP) || isNaN(oldP)) ? parsed.change_amount : (newP - oldP);
+                                return `Цена: <strong>${isNaN(oldP) ? parsed.old_price : oldP.toFixed(2)}₽</strong> → <strong>${isNaN(newP) ? parsed.new_price : newP.toFixed(2)}₽</strong> | Изменение: <strong>${change > 0 ? '+' : ''}${change}₽</strong>`;
+                            }
+
+                            // Для PAYMENT_RECORDED
+                            if (parsed.amount && parsed.method) {
+                                const amt = Number(parsed.amount);
+                                const amtStr = !isNaN(amt) ? amt.toFixed(2) : parsed.amount;
+                                return `Сумма: <strong>${amtStr}₽</strong> | Метод: <strong>${translateAuditValue(parsed.method)}</strong>`;
+                            }
+
+                            // Для REVIEW_CREATED
+                            if (parsed.rating) {
+                                return `Рейтинг: <strong>${parsed.rating}/5⭐</strong> | Статус: <strong>${translateAuditValue(parsed.status)}</strong>`;
+                            }
+
+                            // Общий случай - красивый вывод JSON
+                            return JSON.stringify(parsed, null, 2).replace(/\n/g, '<br>').replace(/"/g, '');
+                        } catch (e) {
+                            console.log('JSON parse failed for audit value:', e);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('Not JSON:', value);
+            }
+            
+            return value;
+        }
+
+        // Функция для перевода статусов и значений на русский
+        function translateAuditValue(value) {
+            const translations = {
+                // Статусы заказов
+                'new': 'Новый',
+                'processing': 'В обработке',
+                'shipped': 'Отправлен',
+                'delivered': 'Доставлен',
+                'cancelled': 'Отменён',
+
+                // Статусы оплаты
+                'pending': 'Ожидает',
+                'completed': 'Завершена',
+                'failed': 'Не удалась',
+
+                // Методы оплаты
+                'card': 'Карта',
+                'cash': 'Наличные',
+                'sberpay': 'СберПэй',
+
+                // Действия
+                'CREATE': 'Создание',
+                'UPDATE': 'Изменение',
+                'DELETE': 'Удаление',
+                'ORDER_CHANGED': 'Изменение',
+                'ORDER_STATUS_CHANGE': 'Изменение статуса',
+                'PRICE_CHANGE': 'Изменение цены',
+                'PAYMENT_RECORDED': 'Платёж',
+                'REVIEW_CREATED': 'Отзыв',
+
+                // Таблицы
+                'products': 'Товары',
+                'orders': 'Заказы',
+                'customers': 'Клиенты',
+                'categories': 'Категории',
+                'brands': 'Бренды',
+
+                // Новые поля для категорий и брендов
+                'category_name': 'Название категории',
+                'parent_name': 'Родительская категория',
+                'brand_name': 'Название бренда',
+                'logo_url': 'URL логотипа',
+                'description': 'Описание',
+
+                // Заголовки формы
+                'Действие:': 'Действие:',
+                'Все действия': 'Все действия',
+                'Таблица:': 'Таблица:',
+                'Пользователь:': 'Пользователь:',
+                'Имя, фамилия или email': 'Имя, фамилия или email',
+                'Дата от:': 'Дата от:',
+                'Дата до:': 'Дата до:',
+                'Фильтровать': 'Фильтровать',
+
+                // Названия полей
+                'product_name': 'Название товара',
+                'price': 'Цена',
+                'stock_quantity': 'Количество',
+                'brand_name': 'Бренд',
+                'category_name': 'Категория',
+                'status': 'Статус',
+                'total_amount': 'Сумма',
+                'payment_method': 'Метод оплаты',
+                'payment_status': 'Статус оплаты',
+                'customer_email': 'Email клиента',
+                'description': 'Описание'
+            };
+
+            const result = translations[value] || value;
+            if (value !== result) {
+                console.log('[AUDIT] Translated:', value, '->', result);
+            }
+            return result;
+        }
+
+        // Функция для обработки текста логов и перевода значений
+        function processAuditText(text) {
+            console.log('[AUDIT] Processing text:', text.substring(0, 100));
+            if (!text) return text;
+
+            // Обрабатываем "Было:" и "Стало:"
+            text = text.replace(/^Было:\s*/, 'Было: ');
+            text = text.replace(/^Стало:\s*/, 'Стало: ');
+
+            // Заменяем Old/New на понятные слова
+            text = text.replace(/Old price:/g, 'Цена:');
+            text = text.replace(/New price:/g, 'Цена:');
+            text = text.replace(/Old status:/g, 'Статус:');
+            text = text.replace(/New status:/g, 'Статус:');
+            text = text.replace(/Old total:/g, 'Сумма:');
+            text = text.replace(/New total:/g, 'Сумма:');
+            text = text.replace(/Total:/g, 'Сумма:');
+            text = text.replace(/Status:/g, 'Статус:');
+            text = text.replace(/price:/g, 'Цена:');
+
+            console.log('[AUDIT] After replacements:', text.substring(0, 100));
+
+            // Переводим все значения в кавычках
+            text = text.replace(/'([^']*)'/g, (match, value) => {
+                const originalValue = value.trim();
+                const translated = translateAuditValue(originalValue);
+                console.log('[AUDIT] Translating value:', originalValue, '->', translated);
+                return `'${translated}'`;
+            });
+
+            // Разбиваем текст на части и переводим поля
+            text = text.replace(/(\w+):/g, (match, field) => {
+                const translatedField = translateAuditValue(field);
+                console.log('[AUDIT] Translating field:', field, '->', translatedField);
+                return `${translatedField}:`;
+            });
+
+            console.log('[AUDIT] Final processed text:', text.substring(0, 100));
+            return text;
+        }
+
+        // Применяем переводы после загрузки страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[AUDIT] Starting translations...');
+
+            // Переводим действия
+            document.querySelectorAll('.action-badge').forEach(badge => {
+                const originalText = badge.textContent.trim();
+                const translated = translateAuditValue(originalText);
+                console.log('[AUDIT] Action badge:', originalText, '->', translated);
+                badge.textContent = translated;
+            });
+
+            // Переводим названия таблиц
+            document.querySelectorAll('td:nth-child(4)').forEach(cell => {
+                const originalText = cell.textContent.trim();
+                if (originalText) {
+                    const translated = translateAuditValue(originalText);
+                    console.log('[AUDIT] Table name:', originalText, '->', translated);
+                    cell.textContent = translated;
+                }
+            });
+
+            // Переводим текст изменений
+            document.querySelectorAll('.changes').forEach(cell => {
+                const originalText = cell.innerHTML;
+                const processedText = processAuditText(originalText);
+                console.log('[AUDIT] Changes text:', originalText.substring(0, 50), '... ->', processedText.substring(0, 50), '...');
+                cell.innerHTML = processedText;
+            });
+
+            // Переводим заголовки формы
+            const formLabels = document.querySelectorAll('label');
+            formLabels.forEach(label => {
+                const originalText = label.textContent.trim();
+                if (originalText) {
+                    const translated = translateAuditValue(originalText);
+                    console.log('[AUDIT] Form label:', originalText, '->', translated);
+                    label.textContent = translated;
+                }
+            });
+
+            // Переводим placeholder'ы
+            const inputs = document.querySelectorAll('input[placeholder]');
+            inputs.forEach(input => {
+                const originalPlaceholder = input.getAttribute('placeholder');
+                if (originalPlaceholder) {
+                    const translated = translateAuditValue(originalPlaceholder);
+                    console.log('[AUDIT] Input placeholder:', originalPlaceholder, '->', translated);
+                    input.setAttribute('placeholder', translated);
+                }
+            });
+
+            // Переводим опции select
+            const options = document.querySelectorAll('option');
+            options.forEach(option => {
+                const originalText = option.textContent.trim();
+                if (originalText) {
+                    const translated = translateAuditValue(originalText);
+                    console.log('[AUDIT] Select option:', originalText, '->', translated);
+                    option.textContent = translated;
+                }
+            });
+
+            // Переводим кнопку фильтрации
+            const filterBtn = document.querySelector('.btn-filter');
+            if (filterBtn) {
+                const originalText = filterBtn.textContent.trim();
+                const translated = translateAuditValue(originalText);
+                console.log('[AUDIT] Filter button:', originalText, '->', translated);
+                filterBtn.textContent = translated;
+            }
+
+            console.log('[AUDIT] Translations completed');
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'admin_panel' %}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Вернуться в админ-панель
+        </a>
+
+        <div class="header">
+            <h1><i class="fas fa-history"></i> Лог аудита</h1>
+            <p>Просмотр всех изменений в системе товаров и заказов</p>
+        </div>
+
+        <form method="GET" class="filters">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="action">Действие:</label>
+                    <select name="action" id="action">
+                        <option value="">Все действия</option>
+                        {% for action in actions %}
+                        <option value="{{ action }}" {% if action_filter == action %}selected{% endif %}>{{ action }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="table">Таблица:</label>
+                    <select name="table" id="table">
+                        <option value="">Все таблицы</option>
+                        {% for table in tables %}
+                        <option value="{{ table }}" {% if table_filter == table %}selected{% endif %}>{{ table }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="user">Пользователь:</label>
+                    <input type="text" name="user" id="user" value="{{ user_filter }}" placeholder="Имя, фамилия или email">
+                </div>
+
+                <div class="filter-group">
+                    <label for="date_from">Дата от:</label>
+                    <input type="date" name="date_from" id="date_from" value="{{ date_from }}">
+                </div>
+
+                <div class="filter-group">
+                    <label for="date_to">Дата до:</label>
+                    <input type="date" name="date_to" id="date_to" value="{{ date_to }}">
+                </div>
+
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-filter"></i> Фильтровать
+                </button>
+            </div>
+        </form>
+
+        <div class="audit-table">
+            {% if audit_logs %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Время</th>
+                        <th>Пользователь</th>
+                        <th>Действие</th>
+                        <th>Таблица</th>
+                        <th>ID записи</th>
+                        <th>Изменения</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in audit_logs %}
+                    <tr>
+                        <td class="timestamp">{{ log.timestamp|date:"d.m.Y H:i:s" }}</td>
+                        <td class="user-info">
+                            {% if log.user %}
+                                {% with user_roles=log.user.users_set.all %}
+                                    {% if user_roles %}
+                                        <strong>{{ user_roles.0.role.role_name|title }}</strong><br>
+                                        <small>{{ log.user.first_name }} {{ log.user.last_name }}</small><br>
+                                        <small style="color: var(--text-secondary);">{{ log.user.email }}</small>
+                                    {% else %}
+                                        <strong>Клиент</strong><br>
+                                        <small>{{ log.user.first_name }} {{ log.user.last_name }}</small><br>
+                                        <small style="color: var(--text-secondary);">{{ log.user.email }}</small>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <em style="color: var(--text-secondary);">Неизвестный пользователь</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="action-badge action-{{ log.action_type|lower }}">
+                                {{ log.action_type }}
+                            </span>
+                        </td>
+                        <td>{{ log.table_name }}</td>
+                        <td>{% if log.record_id %}{{ log.record_id }}{% else %}-{% endif %}</td>
+                        <td class="changes">
+                            {% if log.action_type == 'ORDER_CHANGED' %}
+                                <span id="order_{{ log.log_id }}">{{ log.new_value }}</span>
+                                <script>
+                                    (function() {
+                                        const elem = document.getElementById('order_{{ log.log_id }}');
+                                        if (elem) {
+                                            elem.innerHTML = formatAuditValue(elem.textContent.trim());
+                                        }
+                                    })();
+                                </script>
+                            {% elif log.action_type == 'ORDER_STATUS_CHANGE' %}
+                                <span id="order_status_{{ log.log_id }}">{{ log.new_value }}</span>
+                                <script>
+                                    (function() {
+                                        const elem = document.getElementById('order_status_{{ log.log_id }}');
+                                        if (elem) {
+                                            elem.innerHTML = formatAuditValue(elem.textContent.trim());
+                                        }
+                                    })();
+                                </script>
+                            {% elif log.action_type == 'UPDATE' %}
+                                <strong>Было:</strong> {{ log.old_value }}<br>
+                                <strong>Стало:</strong> {{ log.new_value }}
+                            {% elif log.action_type == 'CREATE' %}
+                                <strong>Создано:</strong> {{ log.new_value }}
+                            {% elif log.action_type == 'DELETE' %}
+                                <strong>Удалено:</strong> {{ log.old_value }}
+                            {% elif log.action_type == 'PRICE_CHANGE' %}
+                                <span id="price_{{ log.log_id }}">{{ log.new_value }}</span>
+                                <script>
+                                    (function() {
+                                        const elem = document.getElementById('price_{{ log.log_id }}');
+                                        if (elem) {
+                                            elem.innerHTML = formatAuditValue(elem.textContent.trim());
+                                        }
+                                    })();
+                                </script>
+                            {% elif log.action_type == 'PAYMENT_RECORDED' %}
+                                <span id="payment_{{ log.log_id }}">{{ log.new_value }}</span>
+                                <script>
+                                    (function() {
+                                        const elem = document.getElementById('payment_{{ log.log_id }}');
+                                        if (elem) {
+                                            elem.innerHTML = formatAuditValue(elem.textContent.trim());
+                                        }
+                                    })();
+                                </script>
+                            {% elif log.action_type == 'REVIEW_CREATED' %}
+                                <span id="review_{{ log.log_id }}">{{ log.new_value }}</span>
+                                <script>
+                                    (function() {
+                                        const elem = document.getElementById('review_{{ log.log_id }}');
+                                        if (elem) {
+                                            elem.innerHTML = formatAuditValue(elem.textContent.trim());
+                                        }
+                                    })();
+                                </script>
+                            {% else %}
+                                <strong>{{ log.action_type|title }}:</strong> {{ log.new_value }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-data">
+                <i class="fas fa-inbox fa-3x" style="color: var(--text-secondary); margin-bottom: 20px;"></i>
+                <p>Записей аудита не найдено</p>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if audit_logs %}
+        <div class="pagination">
+            {% if audit_logs.has_previous %}
+                <a href="?page=1{% if action_filter %}&action={{ action_filter }}{% endif %}{% if table_filter %}&table={{ table_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">&laquo; Первая</a>
+                <a href="?page={{ audit_logs.previous_page_number }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if table_filter %}&table={{ table_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Предыдущая</a>
+            {% endif %}
+
+            <span class="current">
+                Страница {{ audit_logs.number }} из {{ audit_logs.paginator.num_pages }}
+            </span>
+
+            {% if audit_logs.has_next %}
+                <a href="?page={{ audit_logs.next_page_number }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if table_filter %}&table={{ table_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Следующая</a>
+                <a href="?page={{ audit_logs.paginator.num_pages }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if table_filter %}&table={{ table_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Последняя &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

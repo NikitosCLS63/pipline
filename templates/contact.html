@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <h1>Обратная связь</h1>
+    <div class="contact-content">
+        <div class="contact-info">
+            <h2>Свяжитесь с нами</h2>
+            <p>Мы всегда рады помочь вам! Выберите удобный способ связи.</p>
+            
+            <div class="contact-methods">
+                
+                <div class="contact-method">
+                    <div class="contact-icon">📞</div>
+                    <h3>Телефон</h3>
+                    <p>+7 (800) 123-45-67</p>
+                    <p>Работаем: Пн-Пт 9:00-20:00</p>
+                </div>
+                
+                
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<style>
+.contact-content {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.contact-info {
+    margin-bottom: 40px;
+}
+
+.contact-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.contact-method {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    text-align: center;
+}
+
+.contact-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.contact-method h3 {
+    margin: 15px 0 10px;
+    color: var(--text);
+}
+
+.contact-method p {
+    color: var(--text-secondary);
+    margin: 5px 0;
+}
+
+.contact-form-section {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.submit-btn {
+    background: var(--primary);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.submit-btn:hover {
+    background: #e67e22;
+}
+</style>
+
+<script>
+document.getElementById('contact-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    alert('Спасибо за ваше сообщение! Мы свяжемся с вами в ближайшее время.');
+    this.reset();
+});
+</script>
+{% endblock %}
+

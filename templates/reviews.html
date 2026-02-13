@@ -1,0 +1,724 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    .reviews-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .reviews-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .btn-back {
+        background: #1976d2;
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    
+    .btn-back:hover {
+        background: #1565c0;
+    }
+    
+    .review-form-container {
+        background: var(--card-bg);
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #000000; /* светлая тема по умолчанию */
+}
+
+/* Светлые буквы при темной теме */
+[data-theme="dark"] .form-label {
+    color: #ffffff;
+}
+
+    
+    .form-input, .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: Arial, sans-serif;
+        font-size: 1rem;
+    }
+    
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .star-rating {
+        display: flex;
+        gap: 0.5rem;
+        font-size: 2rem;
+        cursor: pointer;
+    }
+    
+    .star {
+        color: #ddd;
+        transition: color 0.2s;
+    }
+    
+    .star:hover,
+    .star.active {
+        color: #ffc107;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .btn-primary {
+        background: #1976d2;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #1565c0;
+    }
+    
+    .btn-secondary {
+        background: #f0f0f0;
+        color: #333;
+    }
+    
+    .btn-secondary:hover {
+        background: #e0e0e0;
+    }
+    
+    .reviews-list {
+        margin-top: 2rem;
+    }
+    
+    .review-item {
+        background: var(--card-bg);
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .review-author {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .review-date {
+        font-size: 0.85rem;
+        color: #999;
+    }
+    
+    .review-rating {
+        color: #ffc107;
+        font-size: 1.1rem;
+        letter-spacing: 0.2rem;
+    }
+    
+    .review-comment {
+        color: #555;
+        line-height: 1.6;
+        margin: 0.75rem 0;
+    }
+
+    [data-theme="dark"] .review-comment {
+        color: #e0e0e0;
+    }
+    
+    .review-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-small {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+    
+    .btn-edit {
+        background: #4caf50;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #45a049;
+    }
+    
+    .btn-delete {
+        background: #f44336;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background: #da190b;
+    }
+    
+    .error-message {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #842029;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+    
+    .success-message {
+        background: #d1e7dd;
+        border: 1px solid #badbcc;
+        color: #0f5132;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+    }
+    
+    .empty-message {
+        text-align: center;
+        padding: 2rem;
+        color: #999;
+    }
+    
+    .my-review-badge {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+    
+    .my-reviews-section {
+        margin-top: 2rem;
+    }
+    
+    .my-reviews-section h2 {
+        margin-bottom: 1.5rem;
+        color: #d68830;
+    }
+    
+    .review-item {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .review-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+    }
+</style>
+
+<div class="reviews-container">
+    <!-- Embed current customer id in a data attribute to avoid JS/template parsing issues -->
+    <div id="__current_customer" data-id="{{ current_customer_id|default:'' }}" style="display:none"></div>
+    <script>
+        const __cust_elem = document.getElementById('__current_customer');
+        const __cust_val = __cust_elem ? __cust_elem.dataset.id : '';
+        window.__CURRENT_CUSTOMER_ID = __cust_val ? __cust_val : null;
+    </script>
+    <div class="reviews-header">
+        <h1>{% if product_id %}Отзывы о товаре{% else %}Мои отзывы{% endif %}</h1>
+        <a href="{% url 'catalog' %}" class="btn-back">← Вернуться в каталог</a>
+    </div>
+    
+    <div id="alerts"></div>
+    
+    {% if not product_id and user_reviews %}
+        <!-- Показываем все отзывы пользователя -->
+        <div class="my-reviews-section">
+            <h2>Ваши отзывы ({{ user_reviews|length }})</h2>
+            <div class="reviews-list">
+                {% for review in user_reviews %}
+                <div class="review-item">
+                    <div class="review-header">
+                        <div>
+                            <span class="review-author">
+                                <a href="{% url 'catalog' %}?product={{ review.product.product_id }}" style="color: #1976d2; text-decoration: none;">
+                                    {{ review.product.product_name }}
+                                </a>
+                            </span>
+                            <span class="my-review-badge">Ваш отзыв</span>
+                        </div>
+                        <span class="review-date">{{ review.publication_date|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    <div class="review-rating">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="review-comment">{{ review.reviews_comment|default:"Без комментария" }}</div>
+                    <div class="review-actions">
+                        <button class="btn-small btn-edit" onclick="startEditReview({{ review.review_id }}, {{ review.rating }}, '{{ review.reviews_comment|escapejs }}', {{ review.product.product_id }})">
+                            Редактировать
+                        </button>
+                        <button class="btn-small btn-delete" onclick="deleteReview({{ review.review_id }})">
+                            Удалить
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% elif not product_id %}
+        <!-- Нет отзывов у пользователя -->
+        <div class="empty-message">
+            <p>У вас пока нет отзывов</p>
+            <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                <a href="{% url 'catalog' %}" style="color: #1976d2;">Перейти в каталог</a>
+            </p>
+        </div>
+    {% else %}
+        <!-- Форма для написания отзыва (только если указан product_id) -->
+        <div id="review-form-section" style="display: none;">
+            <div class="review-form-container">
+                <h2 id="form-title">Написать отзыв</h2>
+                
+                <form id="review-form" onsubmit="submitReview(event)">
+                    <div class="form-group">
+                        <label class="form-label">Рейтинг *</label>
+                        <div class="star-rating" id="star-rating">
+                            <span class="star" data-rating="1">★</span>
+                            <span class="star" data-rating="2">★</span>
+                            <span class="star" data-rating="3">★</span>
+                            <span class="star" data-rating="4">★</span>
+                            <span class="star" data-rating="5">★</span>
+                        </div>
+                        <input type="hidden" id="rating-input" value="5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Ваш отзыв *</label>
+                        <textarea class="form-textarea" id="comment-input" placeholder="Поделитесь своим мнением о товаре..." required></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="submit-btn">Отправить отзыв</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelReview()">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Список отзывов для конкретного товара -->
+        <div id="reviews-list-section">
+            <h2>Отзывы читателей</h2>
+            <div id="reviews-list" class="reviews-list">
+                <div class="loading">Загрузка отзывов...</div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    let currentProductId = null;
+    let currentReviewId = null;
+    let currentUserId = null;
+    let isEditMode = false;
+
+    function getProductIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('product_id');
+    }
+
+    function showAlert(message, type = 'error') {
+        const alertsDiv = document.getElementById('alerts');
+        const alertClass = type === 'success' ? 'success-message' : 'error-message';
+        alertsDiv.innerHTML = `<div class="${alertClass}">${message}</div>`;
+        setTimeout(() => {
+            alertsDiv.innerHTML = '';
+        }, 5000);
+    }
+
+    function setupStarRating() {
+        const stars = document.querySelectorAll('.star');
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.dataset.rating;
+                document.getElementById('rating-input').value = rating;
+                stars.forEach(s => s.classList.remove('active'));
+                for (let i = 0; i < rating; i++) {
+                    stars[i].classList.add('active');
+                }
+            });
+            
+            star.addEventListener('mouseover', function() {
+                const rating = this.dataset.rating;
+                stars.forEach((s, idx) => {
+                    s.style.color = idx < rating ? '#ffc107' : '#ddd';
+                });
+            });
+        });
+        
+        document.getElementById('star-rating').addEventListener('mouseout', function() {
+            const currentRating = document.getElementById('rating-input').value;
+            document.querySelectorAll('.star').forEach((s, idx) => {
+                s.style.color = idx < currentRating ? '#ffc107' : '#ddd';
+            });
+        });
+    }
+
+    function setStarRating(rating) {
+        document.getElementById('rating-input').value = rating;
+        const stars = document.querySelectorAll('.star');
+        stars.forEach((s, idx) => {
+            if (idx < rating) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
+    }
+
+    async function submitReview(e) {
+        e.preventDefault();
+        
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            showAlert('Требуется авторизация для написания отзыва');
+            return;
+        }
+
+        const rating = parseInt(document.getElementById('rating-input').value);
+        const comment = document.getElementById('comment-input').value.trim();
+
+        if (!comment) {
+            showAlert('Пожалуйста, напишите отзыв');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = isEditMode ? 'Обновление...' : 'Отправка...';
+
+        try {
+            const url = isEditMode 
+                ? `/api/reviews/${currentReviewId}/`
+                : '/api/reviews/';
+            
+            const method = isEditMode ? 'PUT' : 'POST';
+            
+            const data = {
+                product_id: parseInt(currentProductId),
+                rating: rating,
+                reviews_comment: comment
+            };
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.status === 400) {
+                const errors = await response.json();
+                const errorMsg = Object.values(errors)[0]?.[0]?.message || Object.values(errors)[0]?.[0] || 'Ошибка при сохранении';
+                showAlert(errorMsg);
+            } else if (response.ok) {
+                showAlert(isEditMode ? 'Отзыв обновлен успешно!' : 'Отзыв добавлен успешно!', 'success');
+                cancelReview();
+                await loadReviews();
+            } else {
+                showAlert('Ошибка при сохранении отзыва');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('Ошибка при сохранении отзыва');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = isEditMode ? 'Обновить отзыв' : 'Отправить отзыв';
+        }
+    }
+
+    function cancelReview() {
+        isEditMode = false;
+        currentReviewId = null;
+        document.getElementById('review-form').reset();
+        setStarRating(5);
+        document.getElementById('form-title').textContent = 'Написать отзыв';
+        document.getElementById('submit-btn').textContent = 'Отправить отзыв';
+        document.getElementById('review-form-section').style.display = 'none';
+    }
+
+    function startEditReview(reviewId, rating, comment, productId = null) {
+        // Если мы на странице всех отзывов (нет product_id в URL), перенаправляем на страницу товара
+        const productIdFromUrl = getProductIdFromUrl();
+        if (!productIdFromUrl && productId) {
+            window.location.href = `/reviews/?product_id=${productId}&edit=${reviewId}`;
+            return;
+        }
+        
+        // Если нет product_id, пытаемся получить его из API
+        if (!productIdFromUrl && !productId) {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                fetch(`/api/reviews/${reviewId}/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => res.json())
+                .then(review => {
+                    if (review.product) {
+                        window.location.href = `/reviews/?product_id=${review.product.product_id || review.product}&edit=${reviewId}`;
+                    } else {
+                        showAlert('Не удалось загрузить информацию о товаре');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading review:', err);
+                    showAlert('Ошибка при загрузке отзыва');
+                });
+            }
+            return;
+        }
+        
+        // Если мы на странице конкретного товара, показываем форму редактирования
+        isEditMode = true;
+        currentReviewId = reviewId;
+        if (productId) {
+            currentProductId = productId;
+        }
+        
+        setStarRating(rating);
+        // Экранируем обратные кавычки и другие спецсимволы
+        const safeComment = String(comment || '').replace(/\\`/g, '`').replace(/\\'/g, "'").replace(/\\"/g, '"');
+        document.getElementById('comment-input').value = safeComment;
+        document.getElementById('form-title').textContent = 'Редактировать отзыв';
+        document.getElementById('submit-btn').textContent = 'Обновить отзыв';
+        document.getElementById('review-form-section').style.display = 'block';
+        document.querySelector('.review-form-container').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function deleteReview(reviewId) {
+        if (!confirm('Вы уверены, что хотите удалить этот отзыв?')) {
+            return;
+        }
+
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            showAlert('Требуется авторизация');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/reviews/${reviewId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                showAlert('Отзыв удален успешно!', 'success');
+                // Если мы на странице всех отзывов, перезагружаем страницу
+                const productIdFromUrl = getProductIdFromUrl();
+                if (!productIdFromUrl) {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    await loadReviews();
+                }
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                showAlert(errorData.error || 'Ошибка при удалении отзыва');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('Ошибка при удалении отзыва');
+        }
+    }
+
+    async function loadReviews() {
+        const reviewsList = document.getElementById('reviews-list');
+        const token = localStorage.getItem('access_token');
+        
+        try {
+            const response = await fetch(`/api/reviews/?product=${currentProductId}`, {
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load reviews');
+            }
+
+            const data = await response.json();
+            const reviews = Array.isArray(data) ? data : (data.results || []);
+
+            if (reviews.length === 0) {
+                reviewsList.innerHTML = '<div class="empty-message">Нет отзывов. Будьте первым!</div>';
+                return;
+            }
+
+            reviewsList.innerHTML = reviews.map(review => {
+                const isOwnReview = token && currentUserId && review.customer?.customer_id === currentUserId;
+                const reviewDate = new Date(review.publication_date);
+                const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+                
+                return `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div>
+                                <span class="review-author">${review.customer?.email || 'Аноним'}</span>
+                                ${isOwnReview ? '<span class="my-review-badge">Ваш отзыв</span>' : ''}
+                            </div>
+                            <span class="review-date">${reviewDate.toLocaleDateString('ru-RU')}</span>
+                        </div>
+                        <div class="review-rating">${stars}</div>
+                        <div class="review-comment">${review.reviews_comment || 'Без комментария'}</div>
+                        ${isOwnReview ? `
+                            <div class="review-actions">
+                                <button class="btn-small btn-edit" onclick="startEditReview(${review.review_id}, ${review.rating}, \`${review.reviews_comment.replace(/`/g, '\\`')}\`)">
+                                    Редактировать
+                                </button>
+                                <button class="btn-small btn-delete" onclick="deleteReview(${review.review_id})">
+                                    Удалить
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Error loading reviews:', error);
+            reviewsList.innerHTML = '<div class="error-message">Ошибка при загрузке отзывов</div>';
+        }
+    }
+
+    async function checkExistingReview() {
+        const token = localStorage.getItem('access_token');
+
+        // If server already provided current customer id, use it (avoids extra API call)
+        if (window.__CURRENT_CUSTOMER_ID) {
+            currentUserId = window.__CURRENT_CUSTOMER_ID;
+        }
+
+        if (!token && !currentUserId) {
+            // Not logged in and no server-side customer id
+            document.getElementById('review-form-section').style.display = 'none';
+            return;
+        }
+
+        try {
+            // If we still don't know currentUserId but have a token, ask API
+            if (!currentUserId && token) {
+                const response = await fetch('/api/users/', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    currentUserId = userData.customer_id;
+                }
+            }
+
+            // Check if user already has a review (public list is fine)
+            const reviewsResponse = await fetch(`/api/reviews/?product=${currentProductId}`, {
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+
+            if (reviewsResponse.ok) {
+                const data = await reviewsResponse.json();
+                const reviews = Array.isArray(data) ? data : (data.results || []);
+                
+                const myReview = currentUserId ? reviews.find(r => r.customer?.customer_id === currentUserId) : null;
+                if (!myReview) {
+                    document.getElementById('review-form-section').style.display = 'block';
+                }
+            }
+        } catch (error) {
+            console.error('Error checking reviews:', error);
+            document.getElementById('review-form-section').style.display = 'block';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        currentProductId = getProductIdFromUrl();
+        
+        // Если указан product_id, загружаем отзывы для этого товара
+        if (currentProductId) {
+            setupStarRating();
+            await checkExistingReview();
+            await loadReviews();
+            
+            // Проверяем, нужно ли открыть форму редактирования
+            const urlParams = new URLSearchParams(window.location.search);
+            const editId = urlParams.get('edit');
+            if (editId) {
+                // Загружаем отзыв для редактирования
+                const token = localStorage.getItem('access_token');
+                if (token) {
+                    try {
+                        const response = await fetch(`/api/reviews/${editId}/`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (response.ok) {
+                            const review = await response.json();
+                            startEditReview(review.review_id, review.rating, review.reviews_comment || '', currentProductId);
+                        }
+                    } catch (error) {
+                        console.error('Error loading review for edit:', error);
+                    }
+                }
+            }
+        } else {
+            // Если нет product_id, значит показываем все отзывы пользователя (уже загружены через Django)
+            // Ничего дополнительного делать не нужно
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    :root {
+        --admin-orders-text: #333;
+        --admin-orders-text-secondary: #495057;
+        --admin-orders-text-light: #6c757d;
+        --admin-orders-link: #007bff;
+        --admin-orders-bg-table: white;
+        --admin-orders-bg-thead: #f8f9fa;
+        --admin-orders-bg-hover: #f8f9fa;
+        --admin-orders-border: #e9ecef;
+        --admin-orders-border-light: #dee2e6;
+        --admin-orders-green: #28a745;
+        --admin-orders-bg-success: #d4edda;
+        --admin-orders-text-success: #155724;
+        --admin-orders-border-success: #c3e6cb;
+        --admin-orders-bg-error: #f8d7da;
+        --admin-orders-text-error: #721c24;
+        --admin-orders-border-error: #f5c6cb;
+    }
+    
+    [data-theme="dark"] {
+        --admin-orders-text: #e0e0e0;
+        --admin-orders-text-secondary: #b0b0b0;
+        --admin-orders-text-light: #999999;
+        --admin-orders-link: #ff8c42;
+        --admin-orders-bg-table: #252525;
+        --admin-orders-bg-thead: #1a1a1a;
+        --admin-orders-bg-hover: #1a1a1a;
+        --admin-orders-border: #404040;
+        --admin-orders-border-light: #555555;
+        --admin-orders-green: #4caf50;
+        --admin-orders-bg-success: #1b5e20;
+        --admin-orders-text-success: #7fd6a0;
+        --admin-orders-border-success: #2e7d32;
+        --admin-orders-bg-error: #5d2c2c;
+        --admin-orders-text-error: #ffcccc;
+        --admin-orders-border-error: #8b3a3a;
+    }
+    
+    .message-box {
+        padding: 12px;
+        margin: 12px 0;
+        border-radius: 6px;
+        border: 1px solid;
+    }
+
+    .message-box.success {
+        background: var(--admin-orders-bg-success);
+        color: var(--admin-orders-text-success);
+        border-color: var(--admin-orders-border-success);
+    }
+
+    .message-box.error {
+        background: var(--admin-orders-bg-error);
+        color: var(--admin-orders-text-error);
+        border-color: var(--admin-orders-border-error);
+    }
+
+    .orders-container {
+        max-width: 1400px;
+        margin: 20px auto;
+        padding: 0 20px;
+    }
+
+    .orders-header {
+        margin-bottom: 24px;
+    }
+
+    .orders-header h2 {
+        margin: 0;
+        font-size: 28px;
+        color: var(--admin-orders-text);
+    }
+
+    .orders-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: var(--admin-orders-bg-table);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .orders-table thead {
+        background: var(--admin-orders-bg-thead);
+    }
+
+    .orders-table th {
+        padding: 16px 12px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--admin-orders-text-secondary);
+        border-bottom: 2px solid var(--admin-orders-border-light);
+        font-size: 14px;
+    }
+
+    .orders-table td {
+        padding: 16px 12px;
+        border-bottom: 1px solid var(--admin-orders-border);
+        vertical-align: top;
+        color: var(--admin-orders-text);
+    }
+    
+    .orders-table td:nth-child(5) {
+        vertical-align: middle;
+    }
+
+    .orders-table tbody tr:hover {
+        background: var(--admin-orders-bg-hover);
+    }
+
+    .orders-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .order-id {
+        font-weight: 600;
+        color: var(--admin-orders-link);
+        font-size: 15px;
+    }
+
+    .customer-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .customer-name {
+        font-weight: 500;
+        color: var(--admin-orders-text);
+    }
+
+    .customer-email {
+        font-size: 13px;
+        color: var(--admin-orders-text-light);
+    }
+
+    .order-date {
+        color: var(--admin-orders-text-secondary);
+        font-size: 14px;
+    }
+
+    .order-amount {
+        font-weight: 600;
+        color: var(--admin-orders-green);
+        font-size: 15px;
+    }
+
+    .status-display {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 200px;
+    }
+
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+        white-space: nowrap;
+        color: white;
+        display: inline-block;
+        width: fit-content;
+    }
+
+    .status-badge.new {
+        background: #4CAF50;
+    }
+
+    .status-badge.processing {
+        background: #2196F3;
+    }
+
+    .status-badge.shipped {
+        background: #FF9800;
+    }
+
+    .status-badge.delivered {
+        background: #4CAF50;
+    }
+
+    .status-badge.cancelled {
+        background: #f44336;
+    }
+
+    .status-badge.default {
+        background: #9E9E9E;
+    }
+
+    .status-description {
+        font-size: 12px;
+        color: var(--admin-orders-text-light);
+        line-height: 1.4;
+    }
+
+    .order-actions {
+        min-width: 400px;
+    }
+    
+    @media (max-width: 1200px) {
+        .status-display {
+            min-width: 150px;
+        }
+        
+        .status-description {
+            font-size: 11px;
+        }
+    }
+
+    .order-form {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .order-form select {
+        padding: 8px 12px;
+        border: 1px solid var(--admin-orders-border-light);
+        border-radius: 4px;
+        font-size: 13px;
+        background: var(--admin-orders-bg-table);
+        color: var(--admin-orders-text);
+        cursor: pointer;
+        min-width: 120px;
+    }
+
+    .order-form select:hover {
+        border-color: var(--admin-orders-border);
+    }
+
+    .order-form input[type="text"] {
+        padding: 8px 12px;
+        border: 1px solid var(--admin-orders-border-light);
+        border-radius: 4px;
+        font-size: 13px;
+        min-width: 150px;
+        background: var(--admin-orders-bg-table);
+        color: var(--admin-orders-text);
+    }
+
+    .order-form input[type="text"]:focus {
+        outline: none;
+        border-color: var(--admin-orders-link);
+        box-shadow: 0 0 0 3px rgba(255,140,66,0.25);
+    }
+
+    .order-form button {
+        padding: 8px 16px;
+        background: var(--admin-orders-link);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .order-form button:hover {
+        background: #0056b3;
+    }
+
+    .order-form button:active {
+        background: #004085;
+    }
+
+    .empty-orders {
+        text-align: center;
+        padding: 40px;
+        color: var(--admin-orders-text-light);
+        font-size: 16px;
+    }
+
+    @media (max-width: 1200px) {
+        .orders-table {
+            font-size: 13px;
+        }
+
+        .orders-table th,
+        .orders-table td {
+            padding: 12px 8px;
+        }
+
+        .order-actions {
+            min-width: 350px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .orders-container {
+            padding: 0 10px;
+        }
+
+        .orders-table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .order-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .order-form select,
+        .order-form input[type="text"],
+        .order-form button {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="orders-container">
+    <div class="orders-header">
+        <h2>Обработка заказов</h2>
+    </div>
+
+    {% if message %}
+    <div class="message-box {% if message_type == 'success' %}success{% else %}error{% endif %}">
+        {{ message }}
+    </div>
+    {% endif %}
+
+    <table class="orders-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Клиент</th>
+                <th>Дата</th>
+                <th>Сумма</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for o in orders %}
+            <tr>
+                <td>
+                    <span class="order-id">#{{ o.order_id }}</span>
+                </td>
+                <td>
+                    <div class="customer-info">
+                        <span class="customer-name">
+                            {% if o.customer.first_name or o.customer.last_name %}
+                                {{ o.customer.first_name|default:'' }} {{ o.customer.last_name|default:'' }}
+                            {% else %}
+                                Клиент #{{ o.customer_id }}
+                            {% endif %}
+                        </span>
+                        <span class="customer-email">
+                            {{ o.customer.email|default:"Email не указан" }}
+                        </span>
+                    </div>
+                </td>
+                <td>
+                    <span class="order-date">{{ o.order_date|date:"d.m.Y H:i" }}</span>
+                </td>
+                <td>
+                    <span class="order-amount">₽{{ o.total_amount|floatformat:2 }}</span>
+                </td>
+                <td>
+                    <div class="status-display">
+                        {% if o.status == 'new' %}
+                            <div class="status-badge new">Новый</div>
+                            <div class="status-description">Заказ создан и ожидает обработки</div>
+                        {% elif o.status == 'processing' %}
+                            <div class="status-badge processing">В обработке</div>
+                            <div class="status-description">Заказ обрабатывается, товары готовятся к отправке</div>
+                        {% elif o.status == 'shipped' %}
+                            <div class="status-badge shipped">Отправлен</div>
+                            <div class="status-description">Заказ отправлен, вы получите трек-номер для отслеживания</div>
+                        {% elif o.status == 'delivered' %}
+                            <div class="status-badge delivered">Доставлен</div>
+                            <div class="status-description">Заказ доставлен по указанному адресу</div>
+                        {% elif o.status == 'cancelled' %}
+                            <div class="status-badge cancelled">Отменен</div>
+                            <div class="status-description">Заказ был отменен</div>
+                        {% else %}
+                            <div class="status-badge default">{{ o.status|default:"Неизвестно" }}</div>
+                            <div class="status-description">Статус заказа</div>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <form method="post" class="order-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ o.order_id }}">
+                        <select name="status">
+                            <option value="new" {% if o.status == 'new' %}selected{% endif %}>Новый</option>
+                            <option value="processing" {% if o.status == 'processing' %}selected{% endif %}>Обработка</option>
+                            <option value="shipped" {% if o.status == 'shipped' %}selected{% endif %}>Отправлен</option>
+                            <option value="delivered" {% if o.status == 'delivered' %}selected{% endif %}>Доставлен</option>
+                            <option value="cancelled" {% if o.status == 'cancelled' %}selected{% endif %}>Отменён</option>
+                        </select>
+                        <input type="text" name="tracking_number" placeholder="Трек-номер" value="{{ o.tracking_number|default:'' }}" maxlength="100">
+                        <button type="submit">Сохранить</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="empty-orders">Нет заказов</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

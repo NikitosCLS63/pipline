@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <h1>Статус заказа</h1>
+    <div class="status-info">
+        <h2>Как проверить статус заказа</h2>
+        <p>Вы можете отслеживать статус вашего заказа в личном кабинете или по трек-номеру, который был отправлен вам на email.</p>
+        
+        <h2>Статусы заказа</h2>
+        
+        <div class="status-item">
+            <div class="status-badge new">Новый</div>
+            <p>Заказ создан и ожидает обработки</p>
+        </div>
+        
+        <div class="status-item">
+            <div class="status-badge processing">В обработке</div>
+            <p>Заказ обрабатывается, товары готовятся к отправке</p>
+        </div>
+        
+        <div class="status-item">
+            <div class="status-badge shipped">Отправлен</div>
+            <p>Заказ отправлен, вы получите трек-номер для отслеживания</p>
+        </div>
+        
+        <div class="status-item">
+            <div class="status-badge delivered">Доставлен</div>
+            <p>Заказ доставлен по указанному адресу</p>
+        </div>
+        
+        <div class="status-item">
+            <div class="status-badge cancelled">Отменен</div>
+            <p>Заказ был отменен</p>
+        </div>
+        
+        <h2 style="margin-top: 40px;">Что делать, если заказ задерживается?</h2>
+        <p>Если ваш заказ не был доставлен в указанные сроки, пожалуйста, свяжитесь с нашей службой поддержки. Мы поможем разобраться в ситуации.</p>
+    </div>
+</div>
+
+<style>
+.status-info {
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.8;
+}
+
+.status-item {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.status-badge.new {
+    background: #4CAF50;
+    color: white;
+}
+
+.status-badge.processing {
+    background: #2196F3;
+    color: white;
+}
+
+.status-badge.shipped {
+    background: #FF9800;
+    color: white;
+}
+
+.status-badge.delivered {
+    background: #4CAF50;
+    color: white;
+}
+
+.status-badge.cancelled {
+    background: #f44336;
+    color: white;
+}
+
+.status-item p {
+    margin: 0;
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}
+

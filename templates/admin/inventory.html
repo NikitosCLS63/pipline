@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="admin-container">
+  <h2 style="color:var(--admin-text);">Управление запасами</h2>
+  <form method="post" class="admin-form">
+    {% csrf_token %}
+    <div style="display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap:wrap;">
+      <select name="product_id" required style="flex:1; min-width:200px;">
+        <option value="">Выберите товар</option>
+        {% for p in products %}
+        <option value="{{ p.product_id }}">{{ p.product_name }} (SKU: {{ p.sku }})</option>
+        {% endfor %}
+      </select>
+      <input type="number" name="quantity" placeholder="Кол-во" required min="1" style="flex:1; min-width:100px;">
+      <input type="text" name="warehouse_id" placeholder="ID склада (опционально)" style="flex:1; min-width:150px;">
+      <button type="submit" class="admin-btn admin-btn-primary">Добавить запас</button>
+    </div>
+  </form>
+
+  <h3 style="margin-top:20px; color:var(--admin-text);">Последние записи в инвентаре</h3>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th style="text-align:left;">Товар</th>
+        <th style="text-align:left;">Добавлено</th>
+        <th style="text-align:left;">Остаток в системе</th>
+        <th style="text-align:left;">Склад</th>
+        <th style="text-align:left;">Обновлён</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in recent_inv %}
+      <tr>
+        <td>{{ i.product.product_name|default:i.product_id }}</td>
+        <td>{{ i.quantity }}</td>
+        <td><strong>{{ i.product.stock_quantity|default:"0" }}</strong></td>
+        <td>{{ i.warehouse_id }}</td>
+        <td>{{ i.updated_at }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" style="text-align:center; color:var(--admin-text-secondary);">Нет записей</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+stages:
+  - build 
+  - lint
+  - test
+  - test_unit
+  - deploy
+
+variables:
+  DJANGO_SETTINGS_MODULE: "WebsiteDjSND.settings"
+  VENV_PATH: ".venv"
+  
+
+build-job:
+  stage: build
+  image: python:3.12-slim
+  script:
+    - python -V 
+    - pip install -U pip
+    - pip install -r requirements.txt
+    - python -m compileall .
+    - echo "Сборка проекта"
+    - echo "Сборка завершена"
+
+
+lint-job:
+  stage: lint
+  image: python:3.12-slim
+  script:
+    - pip install -U pip
+    - pip install -r requirements.txt
+    - pip install ruff
+    - ruff check .
+    - echo "Запуск линтера"
+    - echo "Линтинг завершен"
+
+
+test-job:
+  stage: test
+  image: python:3.12-slim
+  script:
+    - pip install -U pip
+    - pip install -r requirements.txt
+    - echo "Запуск тестов миграции"
+    - python manage.py makemigrations --check --dry-run
+    - echo "Тестирование миграции завершено"
+ 
+
+
+test_unit-job:
+  stage: test_unit
+  image: python:3.12-slim
+  script:
+    - echo "Установка зависимостей"
+    - pip install -U pip
+    - pip install -r requirements.txt
+    - pip install fpdf2
+    - echo "Запуск unit-тестов"
+
+    - echo "Unit-тестирование завершено"
+
+
+deploy_job:
+  stage: deploy
+  image: python:3.12-slim
+  script:
+    - echo "Переадрисация на правильный URL"
+  environment:
+    name: deployting
+    url: http://192.168.1.92:8999
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+
+
+# 172.17.48.1
+# test-job:
+#   stage: test
+#   script:
+#     - echo "начало"
+#     - echo "второй этап"
+#     - echo "Завершение"
+    

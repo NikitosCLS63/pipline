@@ -1,0 +1,355 @@
+<!-- C:\WebsiteDjSND\templates\base.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SND</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <script src="{% static 'js/theme-toggle.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/keyboard-shortcuts.js' %}"></script>
+    <script>
+        // Clear the cartCleared flag so clear-cart.js doesn't interfere if re-added
+        localStorage.removeItem('cartCleared');
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <div class="header-top">
+            <div class="logo">
+                <h1>SND</h1>
+                <h6>интернет-магазин компьютерной техники</h6>
+            </div>
+            <nav>
+                <a href="{% url 'home' %}">Главная</a>
+                <a href="{% url 'catalog' %}">Каталог</a>
+                <a href="{% url 'comparison' %}" id="comparison-link">Сравнение</a>
+                <a href="{% url 'favorites' %}" title="Избранное">
+                    <i class="fas fa-heart"></i>
+                </a>
+                <a href="{% url 'cart' %}" id="cart-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cart-count">0</span>
+                </a>
+
+                <!-- ТОЛЬКО ДЛЯ НЕАВТОРИЗОВАННЫХ -->
+                <span id="auth-links">
+                    <a href="{% url 'login' %}">Вход</a>
+                    <a href="{% url 'register' %}">Регистрация</a>
+                </span>
+
+                <!-- ТОЛЬКО ДЛЯ АВТОРИЗОВАННЫХ -->
+                <span id="user-menu" style="display: none;">
+                    <span id="user-email"></span>
+                    
+                    <a href="{% url 'reviews' %}">Отзывы</a>
+                    <a href="{% url 'orders' %}">Заказы</a>
+                    <!-- Ссылка на админ-панель для админов/сотрудников -->
+                    <a href="/admin-panel/" id="admin-link" style="display: none;">Админ</a>
+                    <a href="#" id="logout-link">Выход</a>
+                    <a href="{% url 'profile' %}" id="profile-link" style="display:inline-flex;align-items:center;gap:0.5rem;">
+                        <img src="https://www.gstatic.com/images/branding/product/1x/avatar_square_grey_512dp.png" alt="Профиль" style="width:28px;height:28px;border-radius:50%;background:#eee;object-fit:cover;vertical-align:middle;">
+                        <span style="font-size:0.95rem;">Профиль</span>
+                    </a>
+                </span>
+            </nav>
+
+        </div>
+    </header>
+
+    {% block content %}{% endblock %}
+    
+    <!-- Глобальные подсказки горячих клавиш -->
+    <div id="global-shortcuts-hint" style="position: fixed; bottom: 20px; right: 20px; padding: 10px 15px; background: rgba(0,0,0,0.7); color: #fff; border-radius: 6px; font-size: 11px; z-index: 9999; display: none; max-width: 300px;">
+        <div style="font-weight: 600; margin-bottom: 6px;">Горячие клавиши:</div>
+        <div style="line-height: 1.6;">
+            <div><kbd style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px; font-size: 10px;">G</kbd> + <kbd style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px; font-size: 10px;">K</kbd> - Корзина</div>
+            <div><kbd style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px; font-size: 10px;">G</kbd> + <kbd style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px; font-size: 10px;">C</kbd> - Каталог</div>
+            <span id="admin-shortcut-hint" style="display: none;">
+                <div><kbd style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px; font-size: 10px;">G</kbd> + <kbd style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px; font-size: 10px;">P</kbd> - Админ-панель</div>
+            </span>
+        </div>
+        <button onclick="document.getElementById('global-shortcuts-hint').style.display='none'" style="margin-top: 8px; padding: 4px 8px; background: rgba(255,255,255,0.2); border: none; color: #fff; border-radius: 3px; cursor: pointer; font-size: 10px;">Скрыть</button>
+    </div>
+    
+    <script>
+    // Показываем подсказки при нажатии G
+    let gKeyHint = false;
+    document.addEventListener('keydown', function(e) {
+        if (e.key.toLowerCase() === 'g' && !gKeyHint) {
+            const hint = document.getElementById('global-shortcuts-hint');
+            const adminLink = document.getElementById('admin-link');
+            if (hint) {
+                if (adminLink && adminLink.style.display !== 'none') {
+                    document.getElementById('admin-shortcut-hint').style.display = 'inline';
+                } else {
+                    document.getElementById('admin-shortcut-hint').style.display = 'none';
+                }
+                hint.style.display = 'block';
+                gKeyHint = true;
+                setTimeout(() => {
+                    if (hint) hint.style.display = 'none';
+                    gKeyHint = false;
+                }, 5000);
+            }
+        }
+    });
+    </script>
+
+    <footer>
+        <div class="footer-container">
+            <!-- Раздел Компания -->
+            <div class="footer-section">
+                <h3>Компания</h3>
+                <ul>
+                    <li><a href="{% url 'about' %}">О нас</a></li>
+                    <li><a href="{% url 'for_customers' %}">Покупателям</a></li>
+                </ul>
+            </div>
+
+            <!-- Раздел Покупателям -->
+            <div class="footer-section">
+                <h3>Покупателям</h3>
+                <ul>
+                    <li><a href="{% url 'how_to_order' %}">Как оформить заказ</a></li>
+                    <li><a href="{% url 'payment_methods' %}">Способы оплаты</a></li>
+                    <li><a href="{% url 'delivery' %}">Доставка</a></li>
+                    <li><a href="{% url 'order_status' %}">Статус заказа</a></li>
+                </ul>
+            </div>
+
+            <!-- Раздел Помощь -->
+            <div class="footer-section">
+                <h3>Помощь</h3>
+                <ul>
+                    <li><a href="{% url 'help' %}">Помощь</a></li>
+                    <li><a href="{% url 'contact' %}">Обратная связь</a></li>
+                </ul>
+            </div>
+
+            <!-- Раздел Оставайтесь на связи -->
+            
+            <div class="footer-section">
+                <h3>Оставайтесь на связи</h3>
+                <p>8-777-77-77-777 (с 03:00 до 22:00)</p>
+
+                
+
+                <p>SND всегда под рукой</p>
+                <p>Следите за новинками и акциями:</p>
+                <input type="email" placeholder="Введите email и подпишитесь">
+                <p>Подписываясь, вы соглашаетесь с условиями политики конфиденциальности</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025–~ Компания SND. Администрация Сайта не несет ответственности за размещаемые
+                Пользователями материалы (в т.ч. информацию и изображения), их содержание и качество. Проект создан в
+                целях курсовой работы</p>
+        </div>
+        <div class="theme-toggle" id="theme-toggle">
+            <i class="fas fa-sun"></i>
+        </div>
+    </footer>
+    <script>
+        // === ПРОВЕРКА АВТОРИЗАЦИИ И РОЛЕЙ ===
+        const token = localStorage.getItem('access_token');
+        const userEmail = localStorage.getItem('user_email') || 'Пользователь';
+        const role = localStorage.getItem('user_role');
+
+        if (token) {
+            document.getElementById('auth-links').style.display = 'none';
+            document.getElementById('user-menu').style.display = 'inline';
+
+            // Показываем email только для admin/employee
+            if (role === 'admin' || role === 'employee') {
+                document.getElementById('user-email').style.display = 'inline';
+                document.getElementById('user-email').textContent = userEmail;
+                document.getElementById('profile-link').style.display = 'none';
+                document.getElementById('admin-link').style.display = 'inline';
+                // Скрываем сравнение для админа/сотрудника
+                document.getElementById('comparison-link').style.display = 'none';
+            } else {
+                // Клиент: скрываем email, показываем профиль и сравнение
+                document.getElementById('user-email').style.display = 'none';
+                document.getElementById('profile-link').style.display = 'inline-flex';
+                document.getElementById('admin-link').style.display = 'none';
+                document.getElementById('comparison-link').style.display = 'inline';
+            }
+        } else {
+            document.getElementById('auth-links').style.display = 'inline';
+            document.getElementById('user-menu').style.display = 'none';
+            document.getElementById('comparison-link').style.display = 'inline';
+        }
+
+        // === КНОПКА ВЫХОДА С ПОДТВЕРЖДЕНИЕМ ===
+        document.getElementById('logout-link')?.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Создаём модальное окно
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); display: flex; justify-content: center;
+        align-items: center; z-index: 9999; font-family: Arial, sans-serif;
+        `;
+
+            modal.innerHTML = `
+        <div style="
+            background: white; padding: 24px; border-radius: 12px; width: 320px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        ">
+            <h3 style="margin: 0 0 16px; color: #333;">Выйти из аккаунта?</h3>
+            <p style="margin: 0 0 24px; color: #666; font-size: 14px;">
+            Вы уверены, что хотите выйти?
+            </p>
+            <div>
+            <button id="confirm-logout" style="
+                background: #dc2626; color: white; border: none; padding: 10px 20px;
+                margin: 0 8px; border-radius: 8px; cursor: pointer; font-weight: 600;
+            ">Да, выйти</button>
+            <button id="cancel-logout" style="
+                background: #e5e7eb; color: #374151; border: none; padding: 10px 20px;
+                margin: 0 8px; border-radius: 8px; cursor: pointer;
+            ">Отмена</button>
+            </div>
+        </div>
+        `;
+
+            document.body.appendChild(modal);
+
+            // Кнопка "Да"
+            document.getElementById('confirm-logout').onclick = () => {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('user_email');
+                localStorage.removeItem('user_role');
+                window.location.href = '{% url "login" %}';
+            };
+
+            // Кнопка "Отмена"
+            document.getElementById('cancel-logout').onclick = () => {
+                modal.remove();
+            };
+
+            // Закрытие по клику вне окна
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.remove();
+            };
+        });
+        
+        // === CART COUNTER (PER USER) ===
+        function getCartKey() {
+            const token = localStorage.getItem('access_token');
+            let customerId = null;
+            if (token) {
+                try {
+                    const parts = token.split('.');
+                    if (parts.length === 3) {
+                        const payload = JSON.parse(atob(parts[1]));
+                        customerId = payload.customer_id || payload.user_id;
+                    }
+                } catch (e) {}
+            }
+            return customerId ? `cart_${customerId}` : 'cart';
+        }
+
+        function updateCartCounter() {
+            try {
+                const cart = JSON.parse(localStorage.getItem(getCartKey()) || '[]');
+                // Validate cart data
+                const validCart = Array.isArray(cart) ? cart : [];
+                
+                // Further validate each item in cart
+                const cleanedCart = validCart.filter(item => {
+                    return item && 
+                           typeof item === 'object' && 
+                           typeof item.product_id === 'number' && 
+                           typeof item.quantity === 'number' && 
+                           item.quantity > 0;
+                });
+                
+                // If we had to clean the cart, save the cleaned version
+                if (cleanedCart.length !== validCart.length) {
+                    localStorage.setItem(getCartKey(), JSON.stringify(cleanedCart));
+                }
+                
+                const totalItems = cleanedCart.reduce((sum, item) => {
+                    return sum + item.quantity;
+                }, 0);
+                
+                const cartCount = document.getElementById('cart-count');
+                if (cartCount) {
+                    cartCount.textContent = totalItems;
+                    cartCount.style.display = totalItems > 0 ? 'inline' : 'none';
+                }
+            } catch (e) {
+                // If there's an error parsing cart data, clear it
+                localStorage.setItem(getCartKey(), '[]');
+                const cartCount = document.getElementById('cart-count');
+                if (cartCount) {
+                    cartCount.textContent = '0';
+                    cartCount.style.display = 'none';
+                }
+            }
+        }
+        
+        // Clear invalid cart data on load and ensure clean state
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const cart = JSON.parse(localStorage.getItem(getCartKey()) || '[]');
+                if (!Array.isArray(cart)) {
+                    localStorage.setItem(getCartKey(), '[]');
+                } else {
+                    // Validate and clean cart data
+                    const cleanedCart = cart.filter(item => {
+                        return item && 
+                               typeof item === 'object' && 
+                               typeof item.product_id === 'number' && 
+                               typeof item.quantity === 'number' && 
+                               item.quantity > 0;
+                    });
+                    
+                    // If we had to clean the cart, save the cleaned version
+                    if (cleanedCart.length !== cart.length) {
+                        localStorage.setItem(getCartKey(), JSON.stringify(cleanedCart));
+                    }
+                }
+            } catch (e) {
+                localStorage.setItem(getCartKey(), '[]');
+            }
+            updateCartCounter();
+        });
+        
+        // Also update cart counter when storage changes (for multi-tab sync)
+        window.addEventListener('storage', function(e) {
+            if (e.key && (e.key === 'cart' || e.key.startsWith('cart_'))) {
+                updateCartCounter();
+            }
+        });
+        
+        // Подсветка активной ссылки в header
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const path = window.location.pathname.replace(/\/$/, '') || '/';
+                document.querySelectorAll('nav a').forEach(a => {
+                    const href = a.getAttribute('href');
+                    if (!href) return;
+                    // Сравнение без завершающего слеша
+                    const cleanHref = href.replace(/\/$/, '') || '/';
+                    if (cleanHref === path || (cleanHref !== '/' && path.startsWith(cleanHref))) {
+                        a.classList.add('active');
+                    } else {
+                        a.classList.remove('active');
+                    }
+                });
+            } catch (e) {
+                // noop
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <h1>Как оформить заказ</h1>
+    <div class="order-steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>Выберите товар</h3>
+            <p>Просмотрите каталог и выберите нужный товар. Добавьте его в корзину.</p>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>Перейдите в корзину</h3>
+            <p>Проверьте выбранные товары и их количество в корзине.</p>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>Оформите заказ</h3>
+            <p>Заполните форму с вашими данными и адресом доставки.</p>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">4</div>
+            <h3>Оплатите заказ</h3>
+            <p>Выберите удобный способ оплаты и завершите покупку.</p>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">5</div>
+            <h3>Получите товар</h3>
+            <p>Дождитесь доставки.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.order-steps {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.step {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    text-align: center;
+}
+
+.step-number {
+    width: 50px;
+    height: 50px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0 auto 15px;
+}
+
+.step h3 {
+    margin: 15px 0 10px;
+    color: var(--text);
+}
+
+.step p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+</style>
+{% endblock %}
+

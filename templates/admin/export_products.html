@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="admin-panel" style="max-width:800px; margin:20px auto;">
+  <h2>Экспорт товаров</h2>
+  
+  <p style="color:#666; margin:12px 0;">
+    Скачайте список всех товаров или отфильтруйте по категориям в CSV формате.
+  </p>
+
+  <div style="margin:20px 0; padding:12px; background:#f9f9f9; border-radius:4px;">
+    <h3 style="margin-top:0;">Варианты экспорта:</h3>
+    
+    <div style="margin-bottom:12px;">
+      <a href="/admin-panel/export-products/?download=1" class="btn" style="padding:10px 20px; background:#28a745; color:white; text-decoration:none; border-radius:4px; display:inline-block;">
+        📥 Все товары (CSV)
+      </a>
+      <p style="font-size:0.9em; color:#666;">Экспортирует все товары со всеми атрибутами</p>
+    </div>
+
+    {% if categories %}
+    <div style="margin-top:20px; border-top:1px solid #ddd; padding-top:12px;">
+      <h4>Экспорт по категориям:</h4>
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:8px;">
+        {% for cat in categories %}
+        <a href="/admin-panel/export-products/?category_id={{ cat.category_id }}" class="btn" style="padding:8px 12px; background:#007bff; color:white; text-decoration:none; border-radius:4px; text-align:center; font-size:0.9em;">
+          {{ cat.category_name }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <h3 style="margin-top:30px;">Что экспортируется:</h3>
+  <ul style="color:#666; font-size:0.95em;">
+    <li>Product ID</li>
+    <li>Название товара</li>
+    <li>Цена</li>
+    <li>Категория</li>
+    <li>Бренд</li>
+    <li>Количество на складе</li>
+    <li>Статус</li>
+    <li>SKU</li>
+  </ul>
+</div>
+
+<style>
+  .btn { transition: all 0.3s ease; }
+  .btn:hover { transform: translateY(-2px); opacity: 0.9; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+  .admin-panel { background: var(--card-bg); padding: 24px; border-radius: 8px; }
+  h2 { color: var(--primary); margin-bottom: 12px; }
+  h3 { color: #333; margin-top: 16px; }
+  ul { margin: 12px 0; }
+  li { margin: 6px 0; }
+</style>
+{% endblock %}

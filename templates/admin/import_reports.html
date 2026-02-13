@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="admin-panel" style="max-width:800px; margin:20px auto;">
+    <h2>Экспорт отчётов (CSV)</h2>
+  
+    <div style="margin:20px 0;">
+        <form method="get" style="margin-bottom:20px;">
+            <input type="hidden" name="download" value="1">
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+                <label for="period" style="font-weight:600; min-width:120px;">Период:</label>
+                <select name="period" id="period" 
+                    style="padding:8px; border:1px solid #ddd; border-radius:4px; flex:1; min-width:200px;">
+                    <option value="all">Все данные</option>
+                    <option value="week">Последняя неделя</option>
+                    <option value="month">Последний месяц</option>
+                    <option value="year">Последний год</option>
+                </select>
+  </div>
+            <button type="submit"
+                style="padding:10px 20px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:600; font-size:14px;">
+                📥 Экспортировать CSV
+            </button>
+        </form>
+    <p style="color:#666; font-size:12px; margin-top:12px;">
+            Экспортируются подробные данные о проданных товарах. Столбцы: ID заказа, ID товара, Название товара, Категория, Количество, Цена за единицу, Сумма, Дата заказа, Статус заказа, Способ оплаты, Статус платежа, Клиент.
+    </p>
+    </div>
+
+    <div style="margin-top:30px; padding:20px; background:#f8f9fa; border-radius:6px;">
+        <h3 style="margin-top:0; margin-bottom:12px;">Примечание:</h3>
+        <p style="margin:0; line-height:1.6;">
+            Экспортируйте CSV файлы с подробными данными о продажах для анализа. 
+            Файл включает информацию о заказах, товарах, ценах, статусах и клиентах. 
+            Файл будет в формате UTF-8 с разделителями запятой и корректно откроется в Excel. 
+            Выберите период для фильтрации данных перед экспортом.
+        </p>
+    </div>
+</div>
+
+<script>
+    // Устанавливаем выбранный период из URL параметров
+    const urlParams = new URLSearchParams(window.location.search);
+    const period = urlParams.get('period');
+    if (period) {
+        document.getElementById('period').value = period;
+    }
+</script>
+{% endblock %}

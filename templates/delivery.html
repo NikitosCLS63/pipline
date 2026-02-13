@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <h1>Доставка</h1>
+    <div class="delivery-info">
+        <h2>Способы доставки</h2>
+        
+        <div class="delivery-method">
+            <h3>🚚 Курьерская доставка</h3>
+            <p>Доставка курьером по адресу. Срок доставки: 1-3 рабочих дня.</p>
+            <p><strong>Стоимость:</strong> от 349 рублей</p>
+        </div>
+        
+        
+        <h2 style="margin-top: 40px;">Условия доставки</h2>
+        <ul>
+            <li>Доставка осуществляется в рабочие дни</li>
+            <li>При получении заказа проверьте товар на соответствие</li>
+            <li>Оплата производится при получении (при выборе соответствующего способа)</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.delivery-info {
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.8;
+}
+
+.delivery-method {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin: 20px 0;
+}
+
+.delivery-method h3 {
+    margin-top: 0;
+    color: var(--primary);
+}
+
+.delivery-info ul {
+    margin: 20px 0;
+    padding-left: 30px;
+}
+
+.delivery-info li {
+    margin: 10px 0;
+}
+</style>
+{% endblock %}
+

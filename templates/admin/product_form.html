@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% if product_id %}Редактировать{% else %}Добавить{% endif %} товар</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <script src="{% static 'js/theme-toggle.js' %}"></script>
+  <style>
+    :root {
+        --primary: #d97706;
+        --bg-primary: #ffffff;
+        --bg-secondary: #f9f9f9;
+        --text: #333;
+        --text-secondary: #666;
+        --border: #eeeeee;
+        --input-bg: #ffffff;
+    }
+    [data-theme="dark"] {
+        --primary: #d97706;
+        --bg-primary: #1a1a1a;
+        --bg-secondary: #2d2d2d;
+        --text: #e0e0e0;
+        --text-secondary: #b0b0b0;
+        --border: #404040;
+        --input-bg: #2d2d2d;
+    }
+    body { background: var(--bg-secondary); color: var(--text); transition: background 0.3s ease, color 0.3s ease; margin: 0; font-family: Arial, sans-serif; }
+    .admin-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    h1 { color: var(--text); }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text); }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); transition: border-color 0.2s; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+    .btn { padding: 10px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block; margin-right: 8px; margin-top: 5px; transition: all 0.2s; }
+    .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+    .btn-secondary { background: #6c757d; }
+    .img-box { display: inline-block; position: relative; margin: 5px; }
+    .preview-image { width: 100px; height: 100px; object-fit: cover; border-radius: 4px; }
+    .remove-btn, .main-btn { position: absolute; top: 0; right: 0; margin: 2px; padding: 4px 8px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; }
+    .remove-btn:hover, .main-btn:hover { background: rgba(0,0,0,0.9); }
+    #specs-form label { display: block; margin-top: 5px; font-weight: bold; color: var(--text); }
+    #specs-form input, #specs-form textarea { width: 100%; margin-bottom: 5px; padding: 8px; border: 2px solid var(--border); border-radius: 4px; background: var(--input-bg); color: var(--text); }
+    #specs-form input:focus, #specs-form textarea:focus { outline: none; border-color: var(--primary); }
+    #json-preview { display:none; }
+    .preview { margin-top: 20px; }
+    .error { color: #dc3545; margin-top: 10px; }
+    #theme-toggle { background: var(--primary); color: white; padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 16px; margin-right: 10px; }
+    #theme-toggle:hover { opacity: 0.9; transform: scale(1.05); }
+  </style>
+</head>
+<body>
+<div class="admin-container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h1>{% if product_id %}Редактировать{% else %}Добавить{% endif %} товар</h1>
+    <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+  </div>
+
+  <form id="product-form" enctype="multipart/form-data" data-product-id="{{ product_id|default:'' }}">
+    <div class="form-group">
+      <label>SKU *</label>
+      <input type="text" id="sku" required />
+    </div>
+
+    <div class="form-group">
+      <label>Название *</label>
+      <input type="text" id="name" required />
+    </div>
+
+    <div class="form-group">
+      <label>Цена *</label>
+      <input type="number" step="0.01" id="price" required />
+    </div>
+
+    <div class="form-group">
+      <label>Количество</label>
+      <input type="number" id="stock" />
+    </div>
+
+    <div class="form-group">
+      <label>Бренд</label>
+      <select id="brand"></select>
+    </div>
+
+    <div class="form-group">
+      <label>Категория</label>
+      <select id="category">
+        <option value="">Выберите категорию</option>
+      </select>
+    </div>
+
+    <!-- Выбор шаблона -->
+    <div class="form-group">
+      <label>Шаблон характеристик</label>
+      <select id="templateSelect">
+        <option value="">Выберите шаблон</option>
+        <option value="laptop">Ноутбук</option>
+        <option value="mouse">Мышь</option>
+        <option value="keyboard">Клавиатура</option>
+        <option value="monitor">Монитор</option>
+      </select>
+      <button type="button" id="loadTemplateBtn">Загрузить шаблон</button>
+    </div>
+
+    <!-- Визуальная форма характеристик -->
+    <div class="form-group">
+      <div id="specs-form"></div>
+      <div id="json-preview"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Главное изображение * (обязательно 1 главное + 4 дополнительных = 5 изображений)</label>
+      <input type="file" id="mainImageInput" accept="image/*">
+
+      <label>Дополнительные изображения (до 4 шт)</label>
+      <input type="file" id="extraImagesInput" accept="image/*" multiple>
+
+      <button type="button" id="addExtraBtn" class="btn btn-secondary">Добавить дополнительное фото</button>
+
+      <div id="preview" class="preview"></div>
+      <div id="image-count" style="margin-top: 10px; padding: 8px; background: #f0f0f0; border-radius: 4px; font-size: 14px;">
+        <strong>Количество изображений: <span id="image-count-value">0</span> / 5</strong>
+        <span id="image-status" style="margin-left: 10px;"></span>
+      </div>
+      <div class="error" id="image-error" style="color: #dc3545; font-weight: bold;"></div>
+    </div>
+
+    <button type="submit" class="btn">Сохранить</button>
+    <a href="/admin-panel/products/" class="btn btn-secondary">Отмена</a>
+  </form>
+</div>
+
+<script>
+const form = document.getElementById('product-form');
+const productId = form.dataset.productId ? parseInt(form.dataset.productId) : null;
+const isEdit = productId !== null;
+
+const mainImageInput = document.getElementById('mainImageInput');
+const extraImagesInput = document.getElementById('extraImagesInput');
+const addExtraBtn = document.getElementById('addExtraBtn');
+
+const brand = document.getElementById("brand");
+const category = document.getElementById("category");
+
+const preview = document.getElementById('preview');
+const imageError = document.getElementById('image-error');
+const specsFormContainer = document.getElementById("specs-form");
+const templateSelect = document.getElementById("templateSelect");
+const loadTemplateBtn = document.getElementById("loadTemplateBtn");
+
+let selectedFiles = [];
+let existingImages = [];
+let specsData = {}; // объект с характеристиками
+let isSpecsModified = false;
+
+// --- Маппинг английских ключей в русские подписи
+const fieldLabels = {
+  brand: "Бренд",
+  model: "Модель",
+  cpu: "Процессор",
+  ram: "Оперативная память",
+  storage: "Накопитель",
+  display: "Дисплей",
+  gpu: "Видеокарта",
+  ports: "Порты (через запятую)",
+  battery: "Батарея",
+  dpi: "DPI",
+  buttons: "Кнопки (через запятую)",
+  connection: "Подключение",
+  layout: "Формат клавиатуры",
+  backlight: "Подсветка",
+  diagonal: "Диагональ",
+  resolution: "Разрешение",
+  matrix: "Матрица",
+  refresh_rate: "Частота обновления"
+};
+
+// --- SKU
+function generateSKU(){
+  const random = Math.random().toString(36).substring(2,6).toUpperCase();
+  const date = new Date().toISOString().slice(0,10).replace(/-/g,"");
+  return `SKU-${date}-${random}`;
+}
+const skuInput = document.getElementById("sku");
+if(!isEdit){
+  skuInput.value = generateSKU();
+  skuInput.disabled = true;
+}
+
+// --- валидация количества изображений
+function validateImageCount() {
+  const count = selectedFiles.length;
+  const countElement = document.getElementById('image-count-value');
+  const statusElement = document.getElementById('image-status');
+  const errorElement = document.getElementById('image-error');
+  
+  countElement.textContent = count;
+  
+  if (count === 5) {
+    statusElement.innerHTML = '<span style="color: #28a745;">✓ Правильное количество (1 главное + 4 дополнительных)</span>';
+    errorElement.textContent = '';
+    errorElement.style.color = '#28a745';
+    return true;
+  } else if (count < 5) {
+    const needed = 5 - count;
+    statusElement.innerHTML = `<span style="color: #dc3545;">⚠ Недостаточно изображений</span>`;
+    errorElement.textContent = `❌ Картинок меньше 5! Нужно добавить еще ${needed} изображение${needed === 1 ? '' : needed < 5 ? 'а' : 'ений'} (1 главное + 4 дополнительных = 5 обязательно)`;
+    errorElement.style.color = '#dc3545';
+    return false;
+  } else {
+    const extra = count - 5;
+    statusElement.innerHTML = `<span style="color: #dc3545;">⚠ Слишком много изображений</span>`;
+    errorElement.textContent = `❌ Картинок больше 5! Нужно удалить ${extra} изображение${extra === 1 ? '' : extra < 5 ? 'а' : 'ений'} (допустимо только 5: 1 главное + 4 дополнительных)`;
+    errorElement.style.color = '#dc3545';
+    return false;
+  }
+}
+
+// --- отображение изображений
+function showImages(){
+  preview.innerHTML="";
+  selectedFiles.forEach((fileOrUrl,index)=>{
+    const container=document.createElement("div");
+    container.classList.add("img-box");
+
+    const img=document.createElement("img");
+    // Для превью: если это File объект, создаем blob только для отображения (не сохраняем)
+    // Если это URL из БД, используем его как есть
+    if(fileOrUrl instanceof File) {
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      reader.readAsDataURL(fileOrUrl);
+    } else if(typeof fileOrUrl === 'string' && !fileOrUrl.startsWith('blob:')) {
+      img.src = fileOrUrl;
+    } else {
+      // Skip blob URLs
+      return;
+    }
+    img.classList.add("preview-image");
+
+    const removeBtn=document.createElement("button");
+    removeBtn.innerHTML="✖";
+    removeBtn.classList.add("remove-btn");
+    removeBtn.onclick=()=>{ 
+      selectedFiles.splice(index,1); 
+      showImages();
+      validateImageCount();
+    };
+
+    const makeMainBtn=document.createElement("button");
+    makeMainBtn.innerHTML="Сделать главным";
+    makeMainBtn.classList.add("main-btn");
+    makeMainBtn.onclick=()=>{
+      const main=selectedFiles.splice(index,1)[0];
+      selectedFiles.unshift(main);
+      showImages();
+      validateImageCount();
+    };
+
+    container.appendChild(img);
+    container.appendChild(removeBtn);
+    if(index!==0) container.appendChild(makeMainBtn);
+    preview.appendChild(container);
+  });
+  
+  // Обновляем счетчик и валидацию
+  validateImageCount();
+}
+
+mainImageInput.addEventListener("change", e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  
+  // Проверяем, не превышаем ли лимит
+  if(selectedFiles.length >= 5){
+    imageError.textContent="❌ Картинок больше 5! Нужно удалить одно изображение (допустимо только 5: 1 главное + 4 дополнительных)";
+    imageError.style.color = '#dc3545';
+    e.target.value = ''; // Очищаем input
+    return;
+  }
+  
+  selectedFiles.unshift(file);
+  showImages();
+  e.target.value = ''; // Очищаем input после добавления
+});
+
+addExtraBtn.addEventListener("click", ()=>extraImagesInput.click());
+extraImagesInput.addEventListener("change", e=>{
+  const files = Array.from(e.target.files);
+  
+  if(selectedFiles.length + files.length > 5){
+    const current = selectedFiles.length;
+    const trying = files.length;
+    const max = 5 - current;
+    imageError.textContent=`❌ Картинок больше 5! Можно добавить максимум ${max} изображение${max === 1 ? '' : max < 5 ? 'а' : 'ений'} (допустимо только 5: 1 главное + 4 дополнительных)`;
+    imageError.style.color = '#dc3545';
+    e.target.value = ''; // Очищаем input
+    return;
+  }
+  
+  if(selectedFiles.length + files.length < 5){
+    const needed = 5 - (selectedFiles.length + files.length);
+    imageError.textContent = `⚠ После добавления будет ${selectedFiles.length + files.length} изображений. Нужно добавить еще ${needed} (должно быть ровно 5: 1 главное + 4 дополнительных)`;
+    imageError.style.color = '#ff9800';
+  } else {
+    imageError.textContent = '';
+  }
+  
+  selectedFiles.push(...files);
+  showImages();
+  e.target.value = ''; // Очищаем input после добавления
+});
+
+// --- проверка и обновление токена
+async function checkAndRefreshToken() {
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    alert('❌ Требуется авторизация! Пожалуйста, войдите в систему.');
+    window.location.href = '/login/';
+    return null;
+  }
+  
+  // Проверяем, не истек ли токен (проверяем через простой запрос)
+  try {
+    const testRes = await fetch('/api/products/', {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (testRes.status === 401) {
+      // Токен истек, пробуем обновить
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (refreshToken) {
+        try {
+          const refreshRes = await fetch('/api/token/refresh/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh: refreshToken })
+          });
+          
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            localStorage.setItem('access_token', data.access);
+            return data.access;
+          }
+        } catch (e) {
+          console.error('Token refresh error:', e);
+        }
+      }
+      
+      // Не удалось обновить токен - требуем повторный вход
+      alert('❌ Сессия истекла! Пожалуйста, войдите в систему снова.');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      window.location.href = '/login/';
+      return null;
+    }
+  } catch (e) {
+    console.error('Token check error:', e);
+  }
+  
+  return token;
+}
+
+// --- загрузка опций
+async function loadOptions(){
+  const token = await checkAndRefreshToken();
+  if (!token) return;
+  
+  const headers = { 'Authorization': `Bearer ${token}` };
+  
+  try {
+    const [brands, categoriesList] = await Promise.all([
+      fetch('/api/brands/', { headers }).then(r => {
+        if (!r.ok) throw new Error('Failed to load brands');
+        return r.json();
+      }),
+      fetch('/api/categories/', { headers }).then(r => {
+        if (!r.ok) throw new Error('Failed to load categories');
+        return r.json();
+      })
+  ]);
+
+    brands.forEach(b => brand.add(new Option(b.brand_name, b.brand_id)));
+    categoriesList.forEach(c => category.add(new Option(c.category_name, c.category_id)));
+  } catch (error) {
+    console.error('Error loading options:', error);
+    alert('Ошибка при загрузке данных. Проверьте подключение к интернету.');
+  }
+}
+
+// --- загрузка товара при редактировании
+async function loadProduct(){
+  if(!isEdit) return;
+  const token = await checkAndRefreshToken();
+  if (!token) return;
+  
+  const headers = { 'Authorization': `Bearer ${token}` };
+  
+  try {
+    const res = await fetch(`/api/products/${productId}/`, { headers });
+    if (!res.ok) {
+      if (res.status === 401) {
+        alert('❌ Сессия истекла! Пожалуйста, войдите в систему снова.');
+        window.location.href = '/login/';
+        return;
+      }
+      throw new Error(`Failed to load product: ${res.status}`);
+    }
+    const data = await res.json();
+
+  skuInput.value=data.sku;
+  document.getElementById('name').value=data.product_name;
+  document.getElementById('price').value=data.price;
+  document.getElementById('stock').value=data.stock_quantity||'';
+  brand.value=data.brand?.brand_id||'';
+  category.value=data.category?.category_id||'';
+
+  if(data.specifications){
+    specsData = data.specifications;
+    renderSpecsForm(specsData);
+  }
+
+  if(data.images && data.images.length>0){
+    // Очищаем images от blob URLs и вложенных JSON
+    const cleanImages = [];
+    for(let img of data.images){
+      if(typeof img === 'string' && !img.startsWith('blob:') && img.trim()){
+        cleanImages.push(img.trim());
+      }
+    }
+    existingImages = [...cleanImages];
+    selectedFiles = [...cleanImages];
+    showImages();
+      validateImageCount();
+    } else {
+      // Если изображений нет, показываем ошибку
+      validateImageCount();
+    }
+  } catch (error) {
+    console.error('Error loading product:', error);
+    alert('Ошибка при загрузке товара. Проверьте подключение к интернету.');
+  }
+}
+
+// --- шаблоны характеристик
+const templates={
+  laptop:{ specs:{brand:"",model:"",cpu:"",ram:"",storage:"",display:"",gpu:"",ports:[],battery:""}, categories:["Ноутбук","Ноутбуки"] },
+  mouse:{ specs:{brand:"",model:"",dpi:"",buttons:"",connection:""}, categories:["Мышь","Мыши"] },
+  keyboard:{ specs:{brand:"",model:"",layout:"",backlight:"",connection:""}, categories:["Клавиатура","Клавиатуры"] },
+  monitor:{ specs:{brand:"",model:"",diagonal:"",resolution:"",matrix:"",refresh_rate:"",ports:[]}, categories:["Монитор","Мониторы"] }
+};
+
+// --- рендер русской формы характеристик
+function renderSpecsForm(data){
+  specsFormContainer.innerHTML="";
+  for(const key in data){
+    const label=document.createElement("label");
+    label.textContent = fieldLabels[key] || key;
+
+    let input;
+    if(Array.isArray(data[key])){
+      input=document.createElement("textarea");
+      input.placeholder="Введите через запятую";
+      input.value=data[key].join(",");
+      input.addEventListener("input",()=>{ data[key]=input.value.split(","); isSpecsModified=true; });
+    } else {
+      input=document.createElement("input");
+      input.value=data[key];
+      input.addEventListener("input",()=>{ data[key]=input.value; isSpecsModified=true; });
+    }
+
+    specsFormContainer.appendChild(label);
+    specsFormContainer.appendChild(input);
+  }
+}
+
+// --- загрузка шаблона с проверкой изменений
+function loadTemplateWithCheck(templateName){
+  if(!templateName) return;
+
+  const selectedCategoryText = category.options[category.selectedIndex]?.text;
+  const expectedCategories = templates[templateName].categories;
+
+  if(selectedCategoryText && selectedCategoryText !== "Выберите категорию" && !expectedCategories.includes(selectedCategoryText)){
+    alert(`Шаблон "${templateName}" не соответствует выбранной категории "${selectedCategoryText}"`);
+    return;
+  }
+
+  if(isSpecsModified){
+    const confirmAction = confirm(
+      "Вы внесли изменения в характеристики. Загрузка нового шаблона удалит текущие данные.\n" +
+      "OK — загрузить новый шаблон.\nОтмена — продолжить редактирование."
+    );
+    if(!confirmAction) return;
+  }
+
+  specsData = JSON.parse(JSON.stringify(templates[templateName].specs));
+  renderSpecsForm(specsData);
+  templateSelect.value = templateName;
+  isSpecsModified = false;
+}
+
+loadTemplateBtn.addEventListener("click", ()=> loadTemplateWithCheck(templateSelect.value));
+
+// --- автоподбор шаблона при смене категории
+category.addEventListener("change", ()=>{
+  const selectedCategoryText = category.options[category.selectedIndex]?.text;
+  if(!selectedCategoryText || selectedCategoryText === "Выберите категорию") return;
+
+  const matchingTemplates = Object.entries(templates)
+    .filter(([key, tpl]) => tpl.categories.includes(selectedCategoryText))
+    .map(([key])=>key);
+
+  const currentTemplate = templateSelect.value;
+
+  if(matchingTemplates.length===0) return;
+
+  if(currentTemplate && !matchingTemplates.includes(currentTemplate)){
+    alert(`Выбранная категория "${selectedCategoryText}" не соответствует текущему шаблону "${currentTemplate}"`);
+  } else if(!currentTemplate && matchingTemplates.length===1){
+    loadTemplateWithCheck(matchingTemplates[0]);
+  }
+});
+
+// --- submit
+form.addEventListener("submit", async e=>{
+  e.preventDefault();
+  
+  // Валидация количества изображений
+  if (!validateImageCount()) {
+    alert("❌ Ошибка: должно быть ровно 5 изображений (1 главное + 4 дополнительных)!\n\n" + 
+          `Текущее количество: ${selectedFiles.length}\n` +
+          (selectedFiles.length < 5 ? `Нужно добавить еще ${5 - selectedFiles.length} изображение${5 - selectedFiles.length === 1 ? '' : 5 - selectedFiles.length < 5 ? 'а' : 'ений'}` : 
+           `Нужно удалить ${selectedFiles.length - 5} изображение${selectedFiles.length - 5 === 1 ? '' : selectedFiles.length - 5 < 5 ? 'а' : 'ений'}`));
+    return;
+  }
+  
+  if(!/^[a-zA-Z0-9а-яА-ЯёЁ\s\-]+$/.test(document.getElementById("name").value)){
+    alert("Название содержит недопустимые символы");
+    return;
+  }
+  if(document.getElementById("price").value<0){ alert("Цена не может быть меньше 0!"); return; }
+
+  // ✅ СИЛЬНАЯ ВАЛИДАЦИЯ: CATEGORY И BRAND ОБЯЗАТЕЛЬНЫ
+  if(!category.value || category.value === "") {
+    alert("❌ Категория ОБЯЗАТЕЛЬНА! Пожалуйста выберите категорию");
+    category.focus();
+    return;
+  }
+  
+  if(!brand.value || brand.value === "") {
+    alert("❌ Бренд ОБЯЗАТЕЛЕН! Пожалуйста выберите бренд");
+    brand.focus();
+    return;
+  }
+
+  console.log("✅ Валидация пройдена!");
+  console.log("Category ID:", category.value, "Type:", typeof category.value);
+  console.log("Brand ID:", brand.value, "Type:", typeof brand.value);
+
+  const formData=new FormData();
+  formData.append("sku",skuInput.value);
+  formData.append("product_name",document.getElementById("name").value);
+  formData.append("price",document.getElementById("price").value);
+  formData.append("stock_quantity",document.getElementById("stock").value);
+  
+  // ✅ Обязательно отправляем category_id и brand_id как строки (они придут из input)
+  formData.append("brand_id", String(brand.value).trim());
+  formData.append("category_id", String(category.value).trim());
+  
+  console.log("FormData entries:");
+  for (let [key, value] of formData.entries()) {
+    if (key !== 'image_files' && key !== 'images') {
+      console.log(`  ${key} = ${value} (type: ${typeof value})`);
+    }
+  }
+  // supplier_id не отправляем - поле не используется
+
+  // Collect all images: existing ones (URLs) + new files
+  const allImages = [];
+  const newImageFiles = [];
+  
+  console.log('DEBUG: selectedFiles count:', selectedFiles.length);
+  console.log('DEBUG: selectedFiles:', selectedFiles);
+  
+  // Iterate through selectedFiles and separate URLs from new Files
+  selectedFiles.forEach((file, index) => { 
+    if(file instanceof File) {
+      console.log(`DEBUG: File ${index}:`, file.name);
+      newImageFiles.push(file);
+      formData.append("image_files", file);
+    } else if(typeof file === 'string' && !file.startsWith('blob:')) {
+      console.log(`DEBUG: URL ${index}:`, file);
+      allImages.push(file);
+    }
+  });
+
+  console.log('DEBUG: newImageFiles count:', newImageFiles.length);
+  console.log('DEBUG: allImages count:', allImages.length);
+
+  formData.append("images", JSON.stringify(allImages));
+  formData.append("specifications", JSON.stringify(specsData));
+
+  // Получаем токен и проверяем его наличие (с возможностью обновления)
+  const token = await checkAndRefreshToken();
+  if (!token) {
+    return; // checkAndRefreshToken уже перенаправит на логин
+  }
+
+  // Показываем индикатор загрузки
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const originalBtnText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Сохранение...';
+
+  try {
+    const res = await fetch(isEdit ? `/api/products/${productId}/` : "/api/products/", { 
+      method: isEdit ? "PUT" : "POST", 
+      body: formData,
+    headers: {
+        'Authorization': `Bearer ${token}`
+        // Не добавляем Content-Type - браузер установит его автоматически для FormData
+    }
+  });
+
+    if (res.ok) { 
+      alert("✅ Успешно!"); 
+      location.href = "/admin-panel/products/"; 
+    } else {
+      let errorMessage = 'Ошибка при сохранении товара';
+      
+      if (res.status === 401) {
+        errorMessage = '❌ Не авторизован! Токен истек или отсутствует. Пожалуйста, войдите в систему снова.';
+        localStorage.removeItem('access_token');
+        setTimeout(() => window.location.href = '/login/', 2000);
+      } else if (res.status === 403) {
+        errorMessage = '❌ Доступ запрещен! У вас нет прав для создания/редактирования товаров. Требуется роль admin или employee.';
+      } else {
+        try {
+          const err = await res.json();
+          errorMessage = `❌ Ошибка: ${err.error || err.detail || err.message || 'Неизвестная ошибка'}`;
+          
+          // Детальная информация для отладки
+          if (err.detail || err.error) {
+            console.error('API Error:', res.status, err);
+          }
+        } catch (e) {
+          errorMessage = `❌ Ошибка ${res.status}: ${res.statusText}`;
+        }
+      }
+      
+      alert(errorMessage);
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+    }
+  } catch (error) {
+    console.error('Network error:', error);
+    alert('❌ Ошибка сети! Проверьте подключение к интернету и попробуйте снова.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalBtnText;
+  }
+});
+
+loadOptions();
+loadProduct();
+</script>
+</body>
+</html>

@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <style>
+        .compare-container{max-width:1200px;margin:1.5rem auto;padding:0.75rem}
+        
+        /* Вкладки категорий */
+        .category-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            overflow-x: auto;
+            padding-bottom: 0;
+        }
+        
+        .category-tab {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .category-tab:hover {
+            color: #1976d2;
+        }
+        
+        .category-tab.active {
+            color: #1976d2;
+            border-bottom-color: #1976d2;
+        }
+        
+        .category-content {
+            display: none;
+        }
+        
+        .category-content.active {
+            display: block;
+        }
+        
+        .compare-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+        .compare-card{border:1px solid #ddd;padding:0.75rem;border-radius:6px;background:var(--card-bg);display:flex;flex-direction:column}
+        .compare-card-img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#f5f5f5;border-radius:4px;margin-bottom:0.5rem}
+        .compare-specifications{font-size:0.8rem;color:#555;line-height:1.5;margin:0.5rem 0;word-wrap:break-word}
+        .compare-spec-item{margin:0.4rem 0;padding:0.3rem 0;border-bottom:1px solid #eee}
+        .compare-spec-label{font-weight:600;color:#333;margin-bottom:0.2rem;display:block}
+        .compare-spec-value{color:#666;white-space:pre-wrap}
+        .compare-spec-list{list-style:none;padding:0;margin:0.2rem 0}
+        .compare-spec-list-item{padding:0.25rem 0;color:#666;line-height:1.4;font-size:0.75rem}
+        .compare-specifications-short{max-height:200px;overflow:hidden;position:relative}
+        .compare-specifications-short::after{content:'';position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(transparent, var(--card-bg, #fff))}
+        .expand-specifications-btn{background:none;border:none;color:#1976d2;cursor:pointer;font-size:0.75rem;padding:0.25rem 0;margin-top:0.25rem;text-decoration:underline}
+        .compare-actions{display:flex;gap:.4rem;margin-top:auto}
+        .btn{padding:.35rem .5rem;border-radius:4px;border:0;cursor:pointer;font-size:0.8rem}
+        .remove-btn{background:#ef5350;color:#fff}
+        .clear-btn{background:#9e9e9e;color:#fff}
+        .spec-good{background:#e8f5e9;color:#2e7d32;padding:0.15rem 0.4rem;border-radius:3px;font-weight:500;font-size:0.8rem}
+        .spec-bad{background:#ffebee;color:#c62828;padding:0.15rem 0.4rem;border-radius:3px;font-weight:500;font-size:0.8rem}
+        
+        .empty-category {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
+    </style>
+
+    <div class="compare-container">
+        <h1>Сравнение товаров</h1>
+        <div style="margin-bottom:1rem;display:flex;gap:0.5rem;">
+            <button class="btn clear-btn" id="clear-compare">Очистить все сравнения</button>
+            <a href="{% url 'catalog' %}" class="btn" style="background:#1976d2;color:#fff;">Вернуться в каталог</a>
+        </div>
+
+        <!-- Вкладки категорий -->
+        <div class="category-tabs" id="category-tabs">
+            <!-- Генерируется JavaScript -->
+        </div>
+
+        <!-- Содержимое каждой категории -->
+        <div id="categories-content">
+            <!-- Генерируется JavaScript -->
+        </div>
+    </div>
+
+    <!-- Reviews Modal -->
+    <div id="reviews-modal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+        <div class="modal-content" style="max-width:600px;background:#fff;padding:2rem;border-radius:12px;max-height:80vh;overflow-y:auto;position:relative;">
+            <button class="modal-close" onclick="closeCompareReviewsModal()" style="position:absolute;top:1rem;right:1rem;background:0;border:0;font-size:2rem;cursor:pointer;">&times;</button>
+            <h2>Отзывы о товаре</h2>
+            <div id="compare-reviews-list" style="margin-top:1rem;"></div>
+            <div style="margin-top:1rem;text-align:center;">
+                <button class="btn clear-btn" onclick="closeCompareReviewsModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === PER-USER COMPARE KEY ===
+        function getCompareKey() {
+            const token = localStorage.getItem('access_token');
+            let customerId = null;
+            if (token) {
+                try {
+                    const parts = token.split('.');
+                    if (parts.length === 3) {
+                        const payload = JSON.parse(atob(parts[1]));
+                        customerId = payload.customer_id || payload.user_id;
+                    }
+                } catch (e) {}
+            }
+            return customerId ? `compare_${customerId}` : 'compare';
+        }
+
+        let currentReviewProductId = null;
+        let allCompareProducts = [];
+        let comparesByCategory = {};
+
+        function getCompareList(){
+            return JSON.parse(localStorage.getItem(getCompareKey()) || '[]');
+        }
+
+        function extractValidImages(images) {
+            if (!images) return [];
+            
+            let result = [];
+            for (let img of images) {
+                if (typeof img === 'string') {
+                    if (img.startsWith('[')) {
+                        try {
+                            const parsed = JSON.parse(img);
+                            if (Array.isArray(parsed)) {
+                                result.push(...parsed);
+                            }
+                        } catch (e) {
+                            result.push(img);
+                        }
+                    } else {
+                        result.push(img);
+                    }
+                }
+            }
+            
+            return result.filter(url => typeof url === 'string' && !url.startsWith('blob:'));
+        }
+
+        // Compare specs: identify best/worst numeric values
+        function getSpecHighlights(specs, products) {
+            const highlights = {};
+            
+            if (!specs) return highlights;
+
+            Object.entries(specs).forEach(([key, values]) => {
+                const vals = [];
+                products.forEach((p, idx) => {
+                    const val = p.specifications && p.specifications[key];
+                    if (val) {
+                        if (typeof val === 'string') {
+                            const num = parseFloat(val.replace(/[^0-9.-]/g, ''));
+                            vals.push({ idx, num: isNaN(num) ? null : num, raw: val });
+                        } else if (Array.isArray(val)) {
+                            vals.push({ idx, num: null, raw: val.join('; ') });
+                        } else {
+                            vals.push({ idx, num: null, raw: String(val) });
+                        }
+                    }
+                });
+
+                const numVals = vals.filter(v => v.num !== null);
+                if (numVals.length > 1) {
+                    const higherBetter = ['ram', 'storage', 'cpu', 'gpu', 'battery', 'price'].some(k => key.toLowerCase().includes(k));
+                    const isBetter = higherBetter ? (a, b) => a > b : (a, b) => a < b;
+                    
+                    const max = Math.max(...numVals.map(v => v.num));
+                    const min = Math.min(...numVals.map(v => v.num));
+
+                    numVals.forEach(v => {
+                        if (!highlights[v.idx]) highlights[v.idx] = {};
+                        if (!highlights[v.idx][key]) highlights[v.idx][key] = '';
+
+                        if (higherBetter && v.num === max) {
+                            highlights[v.idx][key] = 'good';
+                        } else if (higherBetter && v.num === min) {
+                            highlights[v.idx][key] = 'bad';
+                        } else if (!higherBetter && v.num === min) {
+                            highlights[v.idx][key] = 'good';
+                        } else if (!higherBetter && v.num === max) {
+                            highlights[v.idx][key] = 'bad';
+                        }
+                    });
+                }
+            });
+
+            return highlights;
+        }
+
+        async function loadCompare() {
+            const ids = getCompareList();
+            const categoriesContent = document.getElementById('categories-content');
+            const categoryTabs = document.getElementById('category-tabs');
+            
+            if (!ids.length) {
+                categoriesContent.innerHTML = '<div class="empty-category">Список сравнения пуст.</div>';
+                categoryTabs.innerHTML = '';
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+                const res = await fetch('/api/products/', { headers });
+                if (!res.ok) throw new Error('Ошибка API');
+                const products = await res.json();
+                const byId = {};
+                products.forEach(p => byId[p.product_id] = p);
+
+                const items = ids.map(id => byId[id]).filter(Boolean);
+                if (!items.length) {
+                    categoriesContent.innerHTML = '<div class="empty-category">Товары не найдены.</div>';
+                    categoryTabs.innerHTML = '';
+                    return;
+                }
+
+                allCompareProducts = items;
+
+                // Группируем товары по категориям
+                comparesByCategory = {};
+                items.forEach(product => {
+                    const categoryName = product.category_name?.trim() || 'Без категории';
+                    if (!comparesByCategory[categoryName]) {
+                        comparesByCategory[categoryName] = [];
+                    }
+                    comparesByCategory[categoryName].push(product);
+                });
+
+                // Получаем список уникальных категорий
+                const categories = Object.keys(comparesByCategory).sort();
+
+                // Генерируем вкладки категорий
+                categoryTabs.innerHTML = categories.map((cat, idx) => {
+                    const activeClass = idx === 0 ? 'active' : '';
+                    return `<button class="category-tab ${activeClass}" onclick="switchCategory('${cat}')">${cat} (${comparesByCategory[cat].length})</button>`;
+                }).join('');
+
+                // Генерируем содержимое каждой категории
+                categoriesContent.innerHTML = categories.map((cat, idx) => {
+                    const activeClass = idx === 0 ? 'active' : '';
+                    const categoryProducts = comparesByCategory[cat];
+
+                    const productsHtml = categoryProducts.map(p => {
+                        const validImages = extractValidImages(p.images);
+                        const imgSrc = validImages.length > 0 ? validImages[0] : (p.image_url || '/static/images/no-image.png');
+                        
+                        const specificationsId = `specs-${p.product_id}`;
+                        const specs = p.specifications || {};
+                        
+                        // Форматируем характеристики для отображения
+                        function formatSpecifications(specs) {
+                            if (!specs || Object.keys(specs).length === 0) {
+                                return '<div class="compare-spec-item"><span class="compare-spec-value">Характеристики отсутствуют</span></div>';
+                            }
+                            
+                            let html = '';
+                            
+                            // Переводы названий характеристик
+                            const labels = {
+                                'cpu': 'Процессор',
+                                'gpu': 'Видеокарта',
+                                'ram': 'Оперативная память',
+                                'brand': 'Бренд',
+                                'model': 'Модель',
+                                'ports': 'Разъемы и порты',
+                                'battery': 'Аккумулятор',
+                                'display': 'Дисплей',
+                                'storage': 'Накопитель',
+                                'screen': 'Экран',
+                                'weight': 'Вес',
+                                'os': 'Операционная система',
+                                'wifi': 'Wi-Fi',
+                                'bluetooth': 'Bluetooth',
+                                'dimensions': 'Габариты'
+                            };
+                            
+                            Object.entries(specs).forEach(([key, value]) => {
+                                if (value === null || value === undefined || value === '') return;
+                                
+                                const label = labels[key] || key.charAt(0).toUpperCase() + key.slice(1);
+                                
+                                html += '<div class="compare-spec-item">';
+                                html += `<span class="compare-spec-label">${label}:</span>`;
+                                
+                                if (Array.isArray(value)) {
+                                    html += '<ul class="compare-spec-list">';
+                                    value.forEach((item, idx) => {
+                                        let itemText = typeof item === 'string' ? item : JSON.stringify(item);
+                                        // Улучшаем форматирование для портов - разделяем по \n
+                                        if (itemText.includes('\n')) {
+                                            itemText = itemText.split('\n').filter(line => line.trim()).map(line => line.trim()).join(' • ');
+                                        }
+                                        html += `<li class="compare-spec-list-item">${itemText}</li>`;
+                                    });
+                                    html += '</ul>';
+                                } else {
+                                    const valueText = String(value).trim();
+                                    html += `<span class="compare-spec-value">${valueText.replace(/\n/g, '<br>')}</span>`;
+                                }
+                                
+                                html += '</div>';
+                            });
+                            
+                            return html || '<div class="compare-spec-item"><span class="compare-spec-value">Характеристики отсутствуют</span></div>';
+                        }
+                        
+                        const specsHtml = formatSpecifications(specs);
+                        const specsText = JSON.stringify(specs);
+                        const isLongSpecs = specsText.length > 800;
+                        
+                        return `
+                            <div class="compare-card" data-id="${p.product_id}">
+                                <img src="${imgSrc}" alt="${p.product_name}" class="compare-card-img">
+                                <h3 style="font-size:0.9rem;margin:0 0 0.4rem 0;line-height:1.2">${p.product_name}</h3>
+                                <div style="font-size:0.85rem;font-weight:600;margin:0.2rem 0">₽${new Intl.NumberFormat('ru-RU').format(Math.round(p.price))}</div>
+                                <div style="margin:0.25rem 0;font-size:0.75rem;color:#666">${p.brand_name ? '<small>'+p.brand_name+'</small>' : ''} ${p.rating ? '<span>★ '+p.rating.toFixed(1)+'</span>' : ''}</div>
+                                ${p.description ? `<div style=\"margin:0.3rem 0 0.5rem 0;font-size:0.85rem;color:#444;\"><strong>Описание:</strong> ${p.description.replace(/\n/g,'<br>')}</div>` : ''}
+                                <div class="compare-specifications ${isLongSpecs ? 'compare-specifications-short' : ''}" id="${specificationsId}">
+                                    ${specsHtml}
+                                </div>
+                                ${isLongSpecs ? `<button class="expand-specifications-btn" onclick="toggleSpecifications('${specificationsId}')">Показать все характеристики</button>` : ''}
+                                <div class="compare-actions" style="margin-top:auto;">
+                                    <button class="btn" style="background:#1976d2;color:#fff;flex:1;font-size:0.75rem" onclick="openCompareReviewsModal(${p.product_id})">Отзывы</button>
+                                    <button class="btn remove-btn" style="flex:0.6;font-size:0.75rem" onclick="removeFromCompare(${p.product_id})">Удалить</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="category-content ${activeClass}" id="content-${cat}">
+                            <div class="compare-grid">
+                                ${productsHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (e) {
+                console.error(e);
+                categoriesContent.innerHTML = '<div class="empty-category">Ошибка при загрузке товаров.</div>';
+            }
+        }
+
+        function switchCategory(categoryName) {
+            // Скрываем все категории
+            document.querySelectorAll('.category-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Убираем активный класс с кнопок
+            document.querySelectorAll('.category-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Активируем выбранную категорию
+            document.getElementById(`content-${categoryName}`).classList.add('active');
+            
+            // Активируем кнопку
+            event.target.classList.add('active');
+        }
+
+        function removeFromCompare(id) {
+            let list = getCompareList();
+            list = list.filter(x => x !== id);
+            localStorage.setItem(getCompareKey(), JSON.stringify(list));
+            loadCompare();
+        }
+
+        function openCompareReviewsModal(productId) {
+            currentReviewProductId = productId;
+            const reviewsModal = document.getElementById('reviews-modal');
+            const reviewsList = document.getElementById('compare-reviews-list');
+            reviewsList.innerHTML = '<div>Загрузка отзывов...</div>';
+            reviewsModal.style.display = 'flex';
+
+            fetch(`/api/reviews/?product=${productId}`)
+                .then(res => res.ok ? res.json() : Promise.reject('API error'))
+                .then(data => {
+                    const reviews = Array.isArray(data) ? data : (data.results || []);
+                    if (!reviews.length) {
+                        reviewsList.innerHTML = '<div style="color:#999;">Нет отзывов</div>';
+                        return;
+                    }
+                    reviewsList.innerHTML = reviews.map(r => `
+                        <div style="border:1px solid #ddd;padding:0.75rem;margin-bottom:0.5rem;border-radius:6px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                                <strong>${r.customer?.email || 'Аноним'}</strong>
+                                <span style="color:#ffa500;font-size:1rem;">★ ${r.rating}/5</span>
+                            </div>
+                            <div style="font-size:0.9rem;">${r.reviews_comment || 'Без комментария'}</div>
+                            <div style="font-size:0.8rem;color:#999;margin-top:0.5rem;">${new Date(r.publication_date).toLocaleDateString('ru-RU')}</div>
+                        </div>
+                    `).join('');
+                })
+                .catch(e => {
+                    console.error(e);
+                    reviewsList.innerHTML = '<div>Ошибка загрузки отзывов</div>';
+                });
+        }
+
+        function closeCompareReviewsModal() {
+            document.getElementById('reviews-modal').style.display = 'none';
+            currentReviewProductId = null;
+        }
+
+        function toggleSpecifications(specificationsId) {
+            const specsEl = document.getElementById(specificationsId);
+            const btn = specsEl.nextElementSibling;
+            
+            if (specsEl.classList.contains('compare-specifications-short')) {
+                specsEl.classList.remove('compare-specifications-short');
+                if (btn && btn.classList.contains('expand-specifications-btn')) {
+                    btn.textContent = 'Свернуть';
+                }
+            } else {
+                specsEl.classList.add('compare-specifications-short');
+                if (btn && btn.classList.contains('expand-specifications-btn')) {
+                    btn.textContent = 'Показать все характеристики';
+                }
+            }
+        }
+
+        document.getElementById('clear-compare').addEventListener('click', () => {
+            localStorage.removeItem(getCompareKey());
+            loadCompare();
+        });
+
+        loadCompare();
+    </script>
+{% endblock %}

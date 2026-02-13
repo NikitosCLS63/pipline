@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .moderation-container { max-width:1300px; margin:20px auto; padding:0 12px; }
+  .filter-bar { display:flex; gap:12px; margin:20px 0; flex-wrap:wrap; align-items:center; }
+  .filter-btn { padding:8px 12px; background:var(--admin-table-bg); color:var(--admin-text); text-decoration:none; border-radius:4px; font-size:0.9em; cursor:pointer; border:1px solid var(--admin-border); transition:all 0.3s ease; }
+  .filter-btn:hover { background:var(--admin-table-hover); }
+  .filter-btn.active { background:var(--admin-primary); color:white; border-color:var(--admin-primary); }
+  .review-table { width:100%; border-collapse:collapse; margin-top:12px; background:var(--admin-bg); color:var(--admin-text); }
+  .review-table th { background:var(--admin-table-bg); padding:12px; text-align:left; border-bottom:1px solid var(--admin-border); font-weight:600; }
+  .review-table td { padding:12px; border-bottom:1px solid var(--admin-border); }
+  .review-table tbody tr:hover { background:var(--admin-table-hover); }
+  .review-text { max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rating { color:#ffc107; font-weight:600; }
+  .status-approved { background:var(--admin-status-approved); color:var(--admin-status-approved-text); padding:4px 8px; border-radius:3px; font-size:0.85em; font-weight:500; }
+  .status-pending { background:var(--admin-status-pending); color:var(--admin-status-pending-text); padding:4px 8px; border-radius:3px; font-size:0.85em; font-weight:500; }
+  .status-rejected { background:var(--admin-status-rejected); color:var(--admin-status-rejected-text); padding:4px 8px; border-radius:3px; font-size:0.85em; font-weight:500; }
+  .actions { display:flex; gap:6px; }
+  .action-btn { padding:6px 10px; font-size:0.85em; border:none; border-radius:3px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .btn-approve { background:var(--admin-success); color:white; }
+  .btn-approve:hover { background:#228a3e; }
+  .btn-reject { background:var(--admin-warning); color:#333; }
+  .btn-reject:hover { background:#e0a800; }
+  .btn-delete { background:var(--admin-danger); color:white; }
+  .btn-delete:hover { background:#c82333; }
+</style>
+
+<div class="moderation-container">
+  <h2 style="color:var(--admin-text);">Модерация отзывов</h2>
+  
+  <div class="filter-bar">
+    <a href="?status=" class="filter-btn {% if not status %}active{% endif %}">Все отзывы</a>
+    <a href="?status=pending" class="filter-btn {% if status == 'pending' %}active{% endif %}">⏳ На одобрение</a>
+    <a href="?status=approved" class="filter-btn {% if status == 'approved' %}active{% endif %}">✓ Одобрены</a>
+    <span style="margin-left:auto; color:#666; font-size:0.9em;">Всего: <strong>{{ reviews|length }}</strong></span>
+  </div>
+
+  <table class="review-table">
+    <thead>
+      <tr>
+        <th style="width:15%;">Товар</th>
+        <th style="width:15%;">Автор</th>
+        <th style="width:5%;">Рейтинг</th>
+        <th style="width:30%;">Текст отзыва</th>
+        <th style="width:12%;">Статус</th>
+        <th style="width:23%;">Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for review in reviews %}
+      <tr>
+        <td>{{ review.product.product_name|truncatewords:3 }}</td>
+        <td>{{ review.customer.email|default:'Unknown' }}</td>
+        <td class="rating">{{ review.rating }} ⭐</td>
+        <td class="review-text" title="{{ review.reviews_comment }}">{{ review.reviews_comment|truncatewords:10 }}</td>
+        <td>
+          {% if review.status == 'approved' %}
+            <span class="status-approved">✓ Одобрен</span>
+          {% elif review.status == 'rejected' %}
+            <span class="status-pending">✕ Отклонен</span>
+          {% else %}
+            <span class="status-pending">⏳ Ожидание</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="actions">
+            {% if review.status != 'approved' %}
+            <form method="post" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="approve">
+              <input type="hidden" name="review_id" value="{{ review.review_id }}">
+              <button type="submit" class="action-btn btn-approve">✓ Одобрить</button>
+            </form>
+            {% endif %}
+            
+            {% if review.status == 'approved' %}
+            <form method="post" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="reject">
+              <input type="hidden" name="review_id" value="{{ review.review_id }}">
+              <button type="submit" class="action-btn btn-reject">✕ Отклонить</button>
+            </form>
+            {% endif %}
+            
+            <form method="post" style="display:inline;" onsubmit="return confirm('Удалить отзыв?');">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="review_id" value="{{ review.review_id }}">
+              <button type="submit" class="action-btn btn-delete">🗑️ Удалить</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" style="text-align:center; color:#999;">Нет отзывов для модерации</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

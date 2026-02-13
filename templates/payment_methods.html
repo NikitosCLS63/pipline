@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <h1>Способы оплаты</h1>
+    <div class="payment-methods">
+        <div class="payment-method">
+            <div class="payment-icon">💳</div>
+            <h3>Банковская карта</h3>
+            <p>Оплата банковской картой онлайн через защищенный платежный шлюз.</p>
+        </div>
+    
+        
+        <div class="payment-method">
+            <div class="payment-icon">💵</div>
+            <h3>Наличными при получении</h3>
+            <p>Оплата наличными курьеру при доставке или в пункте выдачи.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.payment-methods {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.payment-method {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.payment-method:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.payment-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.payment-method h3 {
+    margin: 15px 0 10px;
+    color: var(--text);
+}
+
+.payment-method p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+</style>
+{% endblock %}
+
