@@ -1,81 +1,70 @@
 stages:
-  - build 
+  - build
   - lint
-  - test
+  - validate
   - test_unit
   - deploy
 
 variables:
   DJANGO_SETTINGS_MODULE: "WebsiteDjSND.settings"
   VENV_PATH: ".venv"
-  
 
 build-job:
   stage: build
-  image: python:3.12-slim
-  script:
-    - python -V 
-    - pip install -U pip
+  before_script:
+    - python3 -m venv $VENV_PATH
+    - source $VENV_PATH/bin/activate
+    - pip install --upgrade pip
     - pip install -r requirements.txt
-    - python -m compileall .
+  script:
     - echo "Сборка проекта"
+    - python3 -m compileall .
     - echo "Сборка завершена"
-
 
 lint-job:
   stage: lint
-  image: python:3.12-slim
-  script:
-    - pip install -U pip
+  before_script:
+    - python3 -m venv $VENV_PATH
+    - source $VENV_PATH/bin/activate
+    - pip install --upgrade pip
     - pip install -r requirements.txt
     - pip install ruff
-    - ruff check .
+  script:
     - echo "Запуск линтера"
+    - ruff check .
     - echo "Линтинг завершен"
 
-
-test-job:
-  stage: test
-  image: python:3.12-slim
-  script:
-    - pip install -U pip
+validate-migrations:
+  stage: validate
+  before_script:
+    - python3 -m venv $VENV_PATH
+    - source $VENV_PATH/bin/activate
+    - pip install --upgrade pip
     - pip install -r requirements.txt
-    - echo "Запуск тестов миграции"
-    - python manage.py makemigrations --check --dry-run
-    - echo "Тестирование миграции завершено"
- 
-
+  script:
+    - echo "Проверка миграций Django"
+    - python3 manage.py makemigrations --check --dry-run
+    - echo "Миграции валидны"
 
 test_unit-job:
   stage: test_unit
-  image: python:3.12-slim
-  script:
-    - echo "Установка зависимостей"
-    - pip install -U pip
+  before_script:
+    - python3 -m venv $VENV_PATH
+    - source $VENV_PATH/bin/activate
+    - pip install --upgrade pip
     - pip install -r requirements.txt
-    - pip install fpdf2
+  script:
     - echo "Запуск unit-тестов"
+    - python3 manage.py test
 
     - echo "Unit-тестирование завершено"
 
-
 deploy_job:
   stage: deploy
-  image: python:3.12-slim
   script:
-    - echo "Переадрисация на правильный URL"
+    - echo "Переадресация на правильный URL"
   environment:
     name: deployting
     url: http://192.168.1.92:8999
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
-
-
-# 172.17.48.1
-# test-job:
-#   stage: test
-#   script:
-#     - echo "начало"
-#     - echo "второй этап"
-#     - echo "Завершение"
-    
