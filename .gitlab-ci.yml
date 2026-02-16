@@ -51,9 +51,12 @@ validate-migrations:
 test:
   stage: test
   before_script:
+    - python3 -m venv $VENV_PATH
+    - source $VENV_PATH/bin/activate
+    - pip install --upgrade pip
     - pip install -r requirements.txt
   script:
-    # Только проверка синтаксиса и импортов
+    - echo "Проверка синтаксиса и импортов"
     - python -c "import WebsiteDjSND.settings"
     - echo "Проект работает"
 
