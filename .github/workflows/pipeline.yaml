@@ -1,0 +1,69 @@
+name: Django_ptoject
+
+on:
+  push:
+    branches: [ master ]
+
+
+jobs:
+  validate:
+    name: Validate django project
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository 
+        uses: actions/Checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+
+      - name: Create venv
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check Django project
+        run: |
+          source .venv/bin/activate
+          echo "Сборка проекта"
+          python3 -m compileall .
+          echo "Сборка завершена"
+
+
+      - name: Check Django migrate
+        run: |
+          source .venv/bin/activate
+          echo "Проверка миграций Django"
+          python3 manage.py makemigrations --check --dry-run
+          echo "Миграции валидны"
+  test: 
+    name: Test django project
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout repository 
+        uses: actions/Checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+
+      - name: Create venv
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check Django project
+        run: |
+          source .venv/bin/activate
+          echo "Сборка проекта"
+          python3 -m compileall .
+          echo "Сборка завершена"

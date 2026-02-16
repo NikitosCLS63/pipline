@@ -583,7 +583,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         super().perform_destroy(instance)
 
     def get_queryset(self):
-        """Filter orders: admin/employee see all; authenticated users see their own; guests see by customer_id param"""
+        
         from apps.users.models import Users
         from apps.users.decorators import get_user_from_request
         from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -620,7 +620,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 print(f"[ORDER_VIEWSET] Error in JWT auth: {e}")
         
-        # Admin: see all orders, Employee: see only their own orders
+        
         if user and user.role:
             if user.role.role_name == 'admin':
                 print(f"[ORDER_VIEWSET] Admin: returning all orders")
@@ -678,8 +678,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Reviews.objects.all().select_related('product', 'customer')
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    # Убрали DjangoFilterBackend, так как фильтрация уже реализована в get_queryset
-    # и он вызывал ошибку с отсутствующим шаблоном для browsable API
+
 
     def get_queryset(self):
         """Filter reviews by product_id parameter"""

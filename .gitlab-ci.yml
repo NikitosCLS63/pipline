@@ -56,15 +56,6 @@ test_unit-job:
   script:
     - echo "Запуск unit-тестов"
     - python3 manage.py test
-
     - echo "Unit-тестирование завершено"
 
-deploy_job:
-  stage: deploy
-  script:
-    - echo "Переадресация на правильный URL"
-  environment:
-    name: deployting
-    url: http://192.168.1.92:8999
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+
