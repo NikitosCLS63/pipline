@@ -1,4 +1,4 @@
-image: python:3.12
+
 
 stages:
   - build
@@ -57,7 +57,7 @@ test_unit-job:
     - pip install -r requirements.txt
   script:
     - echo "Запуск unit-тестов"
-    - python3 manage.py test
+    - python3 manage.py test --keepdb
     - echo "Unit-тестирование завершено"
 
 
