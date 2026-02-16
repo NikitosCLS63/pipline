@@ -57,7 +57,7 @@ test_unit-job:
     - pip install -r requirements.txt
   script:
     - echo "Запуск unit-тестов"
-    - python3 manage.py test --keepdb
+    - python3 manage.py test
     - echo "Unit-тестирование завершено"
 
 
