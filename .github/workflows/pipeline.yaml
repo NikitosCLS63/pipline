@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
 
-
+# коментарий
 jobs:
   build:
     name: Build 
@@ -89,6 +89,9 @@ jobs:
           echo "Проверка миграций Django"
           python3 manage.py makemigrations --check --dry-run
           echo "Миграции валидны"
+
+
+
 
   test:
     name: Test (import settings)
