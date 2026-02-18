@@ -23,6 +23,7 @@ build-job:
     - python3 -m compileall .
     - echo "Сборка завершена"
 
+
 lint-job:
   stage: lint
   before_script:
